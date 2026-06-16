@@ -9,7 +9,7 @@ live "X todos" badge that updates for everyone. ~40 lines of Kotlin, no frontend
 
 ```kotlin
 dependencies {
-    implementation("io.springreact:SpringReact:0.1.0")
+    implementation("com.vexora.springreact:SpringReact:0.1.0")
 }
 ```
 

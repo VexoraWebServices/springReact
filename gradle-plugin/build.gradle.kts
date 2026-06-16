@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
 }
 
-group = "io.springreact"
+group = "com.vexora.springreact"
 version = "0.1.0"
 
 repositories {
@@ -23,8 +23,8 @@ dependencies {
 gradlePlugin {
     plugins {
         create("springreact") {
-            id = "io.springreact"
-            implementationClass = "io.springreact.gradle.SpringReactPlugin"
+            id = "com.vexora.springreact"
+            implementationClass = "com.vexora.springreact.gradle.SpringReactPlugin"
             displayName = "SpringReact"
             description = "Configures a Kotlin + Spring Boot app to use the SpringReact framework"
         }

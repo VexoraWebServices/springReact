@@ -1,6 +1,6 @@
 # 17. The Gradle Plugin
 
-The fastest way to start: apply the **`io.springreact` Gradle plugin**. It configures
+The fastest way to start: apply the **`com.vexora.springreact` Gradle plugin**. It configures
 everything — Kotlin, the Kotlin-Spring compiler plugin, Spring Boot, dependency management,
 and the SpringReact dependency — so your build file is one line.
 
@@ -10,7 +10,7 @@ and the SpringReact dependency — so your build file is one line.
 
 ```kotlin
 plugins {
-    id("io.springreact") version "0.1.0"
+    id("com.vexora.springreact") version "0.1.0"
 }
 ```
 
@@ -26,7 +26,7 @@ plugins {
     id("org.springframework.boot") version "3.4.1"
     id("io.spring.dependency-management") version "1.1.7"
 }
-dependencies { implementation("io.springreact:SpringReact:0.1.0") }
+dependencies { implementation("com.vexora.springreact:SpringReact:0.1.0") }
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 ```
 
@@ -74,6 +74,6 @@ cd my-app && ./gradlew bootRun
 
 ## TODO checklist
 
-- [ ] Add `id("io.springreact") version "0.1.0"` to `plugins { }`
+- [ ] Add `id("com.vexora.springreact") version "0.1.0"` to `plugins { }`
 - [ ] Write a `@LiveComponent @Route("/")` screen
 - [ ] `./gradlew bootRun`

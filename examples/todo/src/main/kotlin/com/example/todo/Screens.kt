@@ -1,35 +1,35 @@
 package com.example.todo
 
-import io.springreact.jsc.Html.a
-import io.springreact.jsc.Html.button
-import io.springreact.jsc.Html.checked
-import io.springreact.jsc.Html.cls
-import io.springreact.jsc.Html.div
-import io.springreact.jsc.Html.h1
-import io.springreact.jsc.Html.header
-import io.springreact.jsc.Html.href
-import io.springreact.jsc.Html.input
-import io.springreact.jsc.Html.key
-import io.springreact.jsc.Html.label
-import io.springreact.jsc.Html.li
-import io.springreact.jsc.Html.main
-import io.springreact.jsc.Html.name
-import io.springreact.jsc.Html.onChange
-import io.springreact.jsc.Html.onClick
-import io.springreact.jsc.Html.onSubmit
-import io.springreact.jsc.Html.p
-import io.springreact.jsc.Html.placeholder
-import io.springreact.jsc.Html.span
-import io.springreact.jsc.Html.type
-import io.springreact.jsc.Html.ul
-import io.springreact.jsc.ServerComponent
-import io.springreact.jsc.UiNode
-import io.springreact.live.LiveAction
-import io.springreact.live.LiveBroadcaster
-import io.springreact.live.LiveComponent
-import io.springreact.live.LiveErrors
-import io.springreact.live.LiveState
-import io.springreact.web.Route
+import com.vexora.springreact.jsc.Html.a
+import com.vexora.springreact.jsc.Html.button
+import com.vexora.springreact.jsc.Html.checked
+import com.vexora.springreact.jsc.Html.cls
+import com.vexora.springreact.jsc.Html.div
+import com.vexora.springreact.jsc.Html.h1
+import com.vexora.springreact.jsc.Html.header
+import com.vexora.springreact.jsc.Html.href
+import com.vexora.springreact.jsc.Html.input
+import com.vexora.springreact.jsc.Html.key
+import com.vexora.springreact.jsc.Html.label
+import com.vexora.springreact.jsc.Html.li
+import com.vexora.springreact.jsc.Html.main
+import com.vexora.springreact.jsc.Html.name
+import com.vexora.springreact.jsc.Html.onChange
+import com.vexora.springreact.jsc.Html.onClick
+import com.vexora.springreact.jsc.Html.onSubmit
+import com.vexora.springreact.jsc.Html.p
+import com.vexora.springreact.jsc.Html.placeholder
+import com.vexora.springreact.jsc.Html.span
+import com.vexora.springreact.jsc.Html.type
+import com.vexora.springreact.jsc.Html.ul
+import com.vexora.springreact.jsc.ServerComponent
+import com.vexora.springreact.jsc.UiNode
+import com.vexora.springreact.live.LiveAction
+import com.vexora.springreact.live.LiveBroadcaster
+import com.vexora.springreact.live.LiveComponent
+import com.vexora.springreact.live.LiveErrors
+import com.vexora.springreact.live.LiveState
+import com.vexora.springreact.web.Route
 import jakarta.validation.constraints.NotBlank
 
 /** A validated form DTO. */
@@ -50,7 +50,7 @@ class MainLayout(private val store: TodoStore) : ServerComponent {
                 a(href("/about"), "About"),
                 span(cls("badge"), "${store.count()} items"),
             ),
-            main(io.springreact.jsc.Html.slot()),
+            main(com.vexora.springreact.jsc.Html.slot()),
         )
 }
 
@@ -79,7 +79,7 @@ class TodosScreen(
         div(
             cls("card"),
             h1("Todos"),
-            io.springreact.jsc.Html.form(
+            com.vexora.springreact.jsc.Html.form(
                 onSubmit("add"),
                 input(type("text"), name("text"), placeholder("What needs doing?")),
                 button(type("submit"), "Add"),

@@ -10,7 +10,7 @@ requires all three). The POM already carries name, description, license, develop
 
 ## What you need (one-time)
 
-1. A **Sonatype Central** account and a registered namespace for `io.springreact`.
+1. A **Sonatype Central** account and a registered namespace for `com.vexora.springreact`.
 2. A **GPG key** for signing (ASCII-armored private key + its passphrase).
 
 ## Publish
@@ -32,7 +32,7 @@ Without those variables, `publish` simply has no Central repository configured a
 is skipped — handy for `publishToMavenLocal` during development:
 
 ```bash
-./gradlew publishToMavenLocal   # installs io.springreact:SpringReact to ~/.m2
+./gradlew publishToMavenLocal   # installs com.vexora.springreact:SpringReact to ~/.m2
 ```
 
 ## The Gradle plugin

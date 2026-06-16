@@ -15,5 +15,5 @@ repositories { mavenCentral() }
 
 dependencies {
     // The whole UI stack — backend + the bundled React runtime — in one dependency.
-    implementation("io.springreact:SpringReact:0.1.0")
+    implementation("com.vexora.springreact:SpringReact:0.1.0")
 }

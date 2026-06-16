@@ -17,7 +17,7 @@ plugins {
     signing
 }
 
-group = "io.springreact"
+group = "com.vexora.springreact"
 version = "0.1.0"
 
 java {

@@ -1,2 +1,2 @@
-io.springreact.autoconfigure.ReactAutoConfiguration
-io.springreact.live.LiveAutoConfiguration
+com.vexora.springreact.autoconfigure.ReactAutoConfiguration
+com.vexora.springreact.live.LiveAutoConfiguration

@@ -8,7 +8,7 @@
 
 ```kotlin
 dependencies {
-    implementation("io.springreact:SpringReact:0.1.0")
+    implementation("com.vexora.springreact:SpringReact:0.1.0")
 }
 ```
 
@@ -21,11 +21,11 @@ run `npm`.
 A "screen" is a normal class that implements `ServerComponent` and renders UI in Kotlin.
 
 ```kotlin
-import io.springreact.jsc.Html.*
-import io.springreact.jsc.ServerComponent
-import io.springreact.jsc.UiNode
-import io.springreact.live.*
-import io.springreact.web.Route
+import com.vexora.springreact.jsc.Html.*
+import com.vexora.springreact.jsc.ServerComponent
+import com.vexora.springreact.jsc.UiNode
+import com.vexora.springreact.live.*
+import com.vexora.springreact.web.Route
 
 @LiveComponent("Home")        // the component's name
 @Route("/")                   // the URL it lives at

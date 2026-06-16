@@ -26,7 +26,7 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
 ## Quick start (Gradle plugin)
 
 ```kotlin
-plugins { id("io.springreact") version "0.1.0" }
+plugins { id("com.vexora.springreact") version "0.1.0" }
 ```
 
 That one line configures Kotlin, Spring Boot, dependency management, and the framework. See

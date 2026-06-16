@@ -1,9 +1,9 @@
 # 3. The HTML DSL
 
-You build UI by calling functions from `io.springreact.jsc.Html`. Import them all:
+You build UI by calling functions from `com.vexora.springreact.jsc.Html`. Import them all:
 
 ```kotlin
-import io.springreact.jsc.Html.*
+import com.vexora.springreact.jsc.Html.*
 ```
 
 Each function returns a `UiNode`. Nest them to build a tree.

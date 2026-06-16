@@ -1,7 +1,7 @@
 // The whole setup: one plugin. It applies Kotlin, Kotlin-Spring, Spring Boot, dependency
 // management, and the SpringReact framework dependency.
 plugins {
-    id("io.springreact") version "0.1.0"
+    id("com.vexora.springreact") version "0.1.0"
 }
 
 group = "com.example"

@@ -1,16 +1,16 @@
 package com.example.minimal
 
-import io.springreact.jsc.Html.button
-import io.springreact.jsc.Html.cls
-import io.springreact.jsc.Html.div
-import io.springreact.jsc.Html.h1
-import io.springreact.jsc.Html.onClick
-import io.springreact.jsc.ServerComponent
-import io.springreact.jsc.UiNode
-import io.springreact.live.LiveAction
-import io.springreact.live.LiveComponent
-import io.springreact.live.LiveState
-import io.springreact.web.Route
+import com.vexora.springreact.jsc.Html.button
+import com.vexora.springreact.jsc.Html.cls
+import com.vexora.springreact.jsc.Html.div
+import com.vexora.springreact.jsc.Html.h1
+import com.vexora.springreact.jsc.Html.onClick
+import com.vexora.springreact.jsc.ServerComponent
+import com.vexora.springreact.jsc.UiNode
+import com.vexora.springreact.live.LiveAction
+import com.vexora.springreact.live.LiveComponent
+import com.vexora.springreact.live.LiveState
+import com.vexora.springreact.web.Route
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
