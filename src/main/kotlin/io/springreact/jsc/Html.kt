@@ -73,6 +73,8 @@ object Html {
     @JvmStatic fun cls(value: String) = Attr { it.props["className"] = value }
     @JvmStatic fun attr(key: String, value: Any?) = Attr { it.props[key] = value }
     @JvmStatic fun name(value: String) = attr("name", value)
+    /** Stable identity for a list child — enables keyed reconciliation. */
+    @JvmStatic fun key(value: Any?) = attr("key", value)
     @JvmStatic fun id(value: String) = attr("id", value)
     @JvmStatic fun href(value: String) = attr("href", value)
     @JvmStatic fun type(value: String) = attr("type", value)

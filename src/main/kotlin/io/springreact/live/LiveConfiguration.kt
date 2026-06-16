@@ -2,6 +2,7 @@ package io.springreact.live
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.springreact.autoconfigure.ReactAutoConfiguration
+import io.springreact.autoconfigure.ReactProperties
 import jakarta.validation.Validator
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -20,9 +21,13 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 /** Registers the single `/live` WebSocket endpoint that all components share. */
 @Configuration(proxyBeanMethods = false)
 @EnableWebSocket
-class LiveWebSocketConfiguration(private val handler: LiveWebSocketHandler) : WebSocketConfigurer {
+class LiveWebSocketConfiguration(
+    private val handler: LiveWebSocketHandler,
+    private val properties: ReactProperties,
+) : WebSocketConfigurer {
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-        registry.addHandler(handler, "/live").setAllowedOriginPatterns("*")
+        registry.addHandler(handler, "/live")
+            .setAllowedOriginPatterns(*properties.allowedOrigins.toTypedArray())
     }
 }
 

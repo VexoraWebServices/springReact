@@ -75,13 +75,14 @@ export type UiNode =
 
 /** A patch op produced by the server's UiTreeDiff. */
 export type Op = {
-  op: 'text' | 'props' | 'insert' | 'remove' | 'replace'
+  op: 'text' | 'props' | 'insert' | 'remove' | 'replace' | 'keyed'
   path: number[]
   value?: string
   set?: Record<string, unknown>
   remove?: string[]
   index?: number
   node?: UiNode
+  items?: Array<{ key: unknown; node?: UiNode }>
 }
 
 function childrenOf(node: any): UiNode[] {
@@ -117,6 +118,16 @@ export function applyOps(root: UiNode, ops: Op[]): UiNode {
       childrenOf(nodeAt(tree, op.path)).splice(op.index!, 0, op.node as UiNode)
     } else if (op.op === 'remove') {
       childrenOf(nodeAt(tree, op.path)).splice(op.index!, 1)
+    } else if (op.op === 'keyed') {
+      const parent = nodeAt(tree, op.path)
+      const byKey = new Map<string, UiNode>()
+      for (const child of childrenOf(parent)) {
+        const k = (child as any)?.props?.key
+        if (k != null) byKey.set(String(k), child)
+      }
+      ;(parent as any).children = (op.items ?? []).map(
+        (it) => it.node ?? byKey.get(String(it.key))!,
+      )
     }
   }
   return tree

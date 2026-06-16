@@ -21,6 +21,13 @@ import org.springframework.web.util.HtmlUtils
 class ReactProperties {
     var title: String = "SpringReact"
     var runtimePath: String = "/springreact/springreact.js"
+
+    /**
+     * Allowed origin patterns for the `/live` WebSocket. Defaults to `*` for easy local
+     * dev; lock this down to your real origin(s) in production, e.g.
+     * `spring.react.allowed-origins=https://app.example.com`.
+     */
+    var allowedOrigins: List<String> = listOf("*")
 }
 
 /**

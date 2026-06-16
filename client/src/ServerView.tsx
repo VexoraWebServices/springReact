@@ -35,8 +35,10 @@ function render(node: UiNode | null, call: Call, slot: ReactNode, key?: string |
     return createElement(Widget, { key, ...rest, call }, ...kids)
   }
 
-  const props: Record<string, unknown> = { key }
+  const reactKey = (rawProps as any).key ?? key
+  const props: Record<string, unknown> = {}
   for (const [name, value] of Object.entries(rawProps)) {
+    if (name === 'key') continue // reserved by React; applied separately below
     if (name.startsWith('on') && value && typeof value === 'object' && '$action' in value) {
       const binding = value as {
         $action: string
@@ -58,7 +60,7 @@ function render(node: UiNode | null, call: Call, slot: ReactNode, key?: string |
   }
 
   const children = (node.children ?? []).map((child, i) => render(child, call, slot, i))
-  return createElement(node.tag, props, ...children)
+  return createElement(node.tag, { key: reactKey, ...props }, ...children)
 }
 
 /**
