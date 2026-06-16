@@ -103,6 +103,25 @@ renders   <ServerView name="Main" slot={ <ServerView name="Home"/> } />
             └ layout stays mounted        └ inner screen, keyed by view → remounts on nav
 ```
 
+## Not-found (404) page
+
+Make a component and point `spring.react.not-found-view` at it:
+
+```kotlin
+@LiveComponent("NotFound")
+class NotFoundScreen : ServerComponent {
+    override fun render(): UiNode =
+        div(cls("card"), h1("404 — Page not found"), a(href("/"), "Go home"))
+}
+```
+
+```properties
+spring.react.not-found-view=NotFound
+```
+
+Any unknown URL now renders this component (with a real `404` status) instead of the
+Spring whitelabel page.
+
 ## Gotchas
 
 - The layout name must match a `@LiveComponent` name.

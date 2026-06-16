@@ -1,16 +1,20 @@
 package io.springreact.autoconfigure
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.springreact.web.ReactView
 import io.springreact.web.ReactViewResolver
 import io.springreact.web.RouteRegistry
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.web.servlet.ModelAndView
 import org.springframework.web.servlet.function.RouterFunction
 import org.springframework.web.servlet.function.RouterFunctions
 import org.springframework.web.servlet.function.ServerResponse
@@ -28,6 +32,12 @@ class ReactProperties {
      * `spring.react.allowed-origins=https://app.example.com`.
      */
     var allowedOrigins: List<String> = listOf("*")
+
+    /**
+     * Component to render for unknown URLs (HTTP 404). Empty = Spring's default error page.
+     * e.g. `spring.react.not-found-view=NotFound`.
+     */
+    var notFoundView: String = ""
 }
 
 /**
@@ -43,6 +53,7 @@ class ReactRenderer(
         val viewJson = writeJson(viewName)
         val modelJson = writeJson(sanitize(model))
         val routesJson = writeJson(routes.toJson())
+        val notFoundJson = writeJson(properties.notFoundView.ifEmpty { null })
         return """
             <!doctype html>
             <html lang="en">
@@ -54,6 +65,7 @@ class ReactRenderer(
                 window.__VIEW__ = $viewJson;
                 window.__MODEL__ = $modelJson;
                 window.__ROUTES__ = $routesJson;
+                window.__NOTFOUND__ = $notFoundJson;
               </script>
             </head>
             <body>
@@ -110,4 +122,15 @@ class ReactAutoConfiguration {
         }
         return builder.build()
     }
+
+    /** Render the configured component for HTTP 404s (so deep links to bad URLs look nice). */
+    @Bean
+    fun springReactErrorViewResolver(properties: ReactProperties, renderer: ReactRenderer): ErrorViewResolver =
+        ErrorViewResolver { _, status, _ ->
+            if (status == HttpStatus.NOT_FOUND && properties.notFoundView.isNotEmpty()) {
+                ModelAndView(ReactView(properties.notFoundView, renderer))
+            } else {
+                null
+            }
+        }
 }

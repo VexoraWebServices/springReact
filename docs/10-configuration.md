@@ -8,6 +8,7 @@ Everything has a sensible default — you can run with **zero** config.
 | `spring.react.title` | `SpringReact` | The `<title>` of the HTML shell. |
 | `spring.react.runtime-path` | `/springreact/springreact.js` | URL the bundled runtime is served from. Change only if you serve it elsewhere (e.g. a CDN). |
 | `spring.react.allowed-origins` | `*` | Allowed origins for the `/live` WebSocket. **Lock this down in production.** |
+| `spring.react.not-found-view` | *(empty)* | Component name to render for unknown URLs (404). Empty = Spring's default error page. |
 
 ## Examples
 
