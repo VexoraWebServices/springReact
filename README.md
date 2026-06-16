@@ -1,29 +1,87 @@
 # SpringReact
 
-A **Kotlin Spring Boot framework** for building React UIs without leaving the JVM. You
-write screens as **Kotlin server components**; the framework renders them to a React
-element tree, streams it (and incremental patches) to a runtime it **bundles inside its own
-jar**, and reconciles it with real React over **one WebSocket**.
+**Build interactive websites by writing one language — Kotlin — with no separate
+"frontend" to learn.**
 
-Like Thymeleaf: add the dependency, write components, run. **No separate frontend project,
-no npm, no REST glue.** One process, one port, one jar.
+> 🟢 **New to programming?** This page now starts gentle. SpringReact is a tool for people
+> who know a *little* **Kotlin or Java**. If you've never coded, that's okay — learn some
+> basic Kotlin first, then come back. (Looking for the precise technical pitch? It's in
+> [For experienced developers](#for-experienced-developers) lower down.)
+
+## What it does, in plain words
+
+To make a modern website you normally write **two** programs and glue them together:
+
+- a **backend** — runs on the *server* (an always-on computer that holds your data), and
+- a **frontend** — runs in each visitor's *web browser*; the buttons and screens they see.
+
+That's a lot to learn. **SpringReact removes the second one.** You write your screens once,
+in Kotlin, on the server. SpringReact shows them in the browser and keeps them **live**:
+when someone clicks, your Kotlin code runs and the screen updates by itself — no separate
+frontend project, no JavaScript needed.
+
+> 🍽️ **Analogy:** normally the kitchen (backend) and the waiters (frontend) coordinate with
+> written tickets (glue code). SpringReact is like the kitchen controlling each diner's
+> plate directly — you just cook (write Kotlin) and what people see updates itself.
+
+## Your first screen (a click counter)
 
 ```kotlin
-@LiveComponent("Home")
-@Route("/", layout = "Main")
-class HomeScreen(private val greetings: GreetingService) : ServerComponent {
+@LiveComponent("Home")          // 1. a screen we'll call "Home"
+@Route("/")                     // 2. show it at the homepage address, "/"
+class HomeScreen : ServerComponent {
 
-    @LiveState var count = 0
-    @LiveAction fun increment() { count++ }
+    @LiveState var count = 0     // 3. a number we remember; starts at 0
 
-    override fun render(): UiNode =
-        div(cls("card"),
-            h1(greetings.hello("world")),
-            button(onClick("increment"), "Count: $count"))
+    @LiveAction fun click() {    // 4. something the user can do…
+        count = count + 1        //    …here, add 1 to count
+    }
+
+    override fun render(): UiNode =          // 5. what the screen looks like:
+        div(
+            h1("You clicked $count times"),  //    a heading showing the number
+            button(onClick("click"), "Click me"),  // a button that calls click()
+        )
 }
 ```
 
-## Quick start (Gradle plugin)
+**What you'd see:** open the site → "You clicked **0** times" and a button. Every click runs
+`click()` on the server, `count` goes up, and the heading updates automatically.
+
+Reading it line by line:
+
+1. `@LiveComponent("Home")` — "this class is a screen named Home."
+2. `@Route("/")` — "show this screen at the website's homepage."
+3. `@LiveState var count = 0` — a value the screen remembers (its *state*). `var` means it
+   can change; it starts at `0`.
+4. `@LiveAction fun click() { ... }` — an action the browser can trigger (here, when the
+   button is clicked). It changes `count`.
+5. `render()` — describes what to show. `div`, `h1`, `button` are just HTML pieces written
+   as Kotlin; `$count` drops the current number into the text.
+
+That's the whole idea: **remember some state, define actions, and describe the screen.**
+SpringReact handles the rest.
+
+## Try it (5 minutes)
+
+Follow **[Getting Started](docs/01-getting-started.md)** — it walks you through running your
+very first screen step by step. Or run the ready-made example:
+
+```bash
+cd examples/todo && gradle bootRun   # then open http://localhost:8080
+```
+
+---
+
+## For experienced developers
+
+A **Kotlin Spring Boot framework** for building React UIs without leaving the JVM. You
+write screens as **Kotlin server components**; the framework renders them to a React
+element tree, streams it (and incremental patches) to a runtime it **bundles inside its own
+jar**, and reconciles it with real React over **one WebSocket**. Like Thymeleaf: add the
+dependency, write components, run. **No separate frontend project, no npm, no REST glue.**
+
+### Quick start (Gradle plugin)
 
 ```kotlin
 plugins { id("com.vexora.springreact") version "0.1.0" }
