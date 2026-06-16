@@ -45,6 +45,9 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
   component (charts, canvas, animations) while logic stays on the server.
 - **Authorization** — `@LiveAuthorize("ADMIN")` guards actions; a pluggable `LiveSecurity`
   bean decides (bridge it to Spring Security).
+- **Async, loading & redirects** — `LiveContext.current()` gives an action a `handle()` to
+  push a re-render after background work (loading states) and `redirect("/path")` for
+  server-initiated navigation.
 - **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
   `/springreact/springreact.js`. Consumers ship no frontend files.
 
@@ -79,9 +82,9 @@ SpringReact/                       (Kotlin, build.gradle.kts)
 
 Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- **11 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+- **13 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
   widgets, diffing), shell + routing, dynamic route params, broadcast (two clients), form
-  validation, keyed reconciliation, and authorization.
+  validation, keyed reconciliation, authorization, and async/redirect.
 - **14 client unit tests** (vitest) — patch application, route resolution + matching, keyed
   ops — plus a TypeScript typecheck.
 

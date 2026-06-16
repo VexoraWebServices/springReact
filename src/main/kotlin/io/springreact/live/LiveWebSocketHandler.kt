@@ -83,8 +83,13 @@ open class LiveWebSocketHandler(
                         sendError(session, id, "No component mounted for id '$id'")
                         return
                     }
-                    invokeAction(instance, msg.path("action").asText(), msg.path("args"), session.principal)
-                    renderUpdate(session, id, instance)
+                    LiveContext.bind(LiveContext(this, session, id))
+                    try {
+                        invokeAction(instance, msg.path("action").asText(), msg.path("args"), session.principal)
+                        renderUpdate(session, id, instance)
+                    } finally {
+                        LiveContext.clear()
+                    }
                 }
                 "unmount" -> {
                     instances.remove(id)
@@ -97,6 +102,24 @@ open class LiveWebSocketHandler(
             log.warn("Live message failed (type={}, id={}): {}", type, id, ex.message)
             sendError(session, id, ex.message)
         }
+    }
+
+    /** Re-render a specific instance (used by LiveHandle.update from async code). */
+    internal fun rerender(session: WebSocketSession, id: String) {
+        if (!session.isOpen) return
+        @Suppress("UNCHECKED_CAST")
+        val map = session.attributes[INSTANCES] as? MutableMap<String, Any> ?: return
+        val instance = map[id] ?: return
+        try {
+            renderUpdate(session, id, instance)
+        } catch (ex: Exception) {
+            log.warn("Async update for {} failed: {}", id, ex.message)
+        }
+    }
+
+    /** Ask a client to navigate (server-initiated redirect). */
+    internal fun sendNavigate(session: WebSocketSession, path: String) {
+        send(session, mapOf("t" to "navigate", "path" to path))
     }
 
     override fun broadcast(component: String) {

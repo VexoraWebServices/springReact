@@ -27,6 +27,7 @@ function connect(): Promise<void> {
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data) as LiveMessage
       if (msg.t === 'error') console.error('[springreact]', msg.id, (msg as any).message)
+      else if (msg.t === 'navigate') (window as any).SpringReact?.navigate?.((msg as any).path)
       else listeners.get(msg.id)?.(msg)
     }
     ws.onclose = () => {
