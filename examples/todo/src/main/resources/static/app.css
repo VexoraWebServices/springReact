@@ -1,5 +1,5 @@
-/* SpringReact Todo — a clean, modern UI. Served from static/ and referenced via
-   spring.react.stylesheets=/app.css */
+/* SpringReact Todo — modern, mobile-responsive UI.
+   Served from static/ and referenced via spring.react.stylesheets=/app.css */
 
 :root {
   --bg: #0b1020;
@@ -18,6 +18,8 @@
 
 * { box-sizing: border-box; }
 
+html { -webkit-text-size-adjust: 100%; }
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -29,51 +31,69 @@ body {
     var(--bg);
 }
 
-/* Layout */
+/* ---------- Layout ---------- */
 .app {
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 20px 64px;
+  padding: 0 16px 64px;
 }
 
 .nav {
   position: sticky;
   top: 0;
+  z-index: 5;
   display: flex;
   align-items: center;
-  gap: 22px;
-  padding: 18px 4px;
-  margin-bottom: 28px;
-  backdrop-filter: blur(8px);
+  gap: 16px;
+  padding: 16px 4px;
+  margin-bottom: 24px;
+  background: rgba(11, 16, 32, 0.6);
+  backdrop-filter: blur(10px);
 }
 
-.nav a {
+.brand {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-links {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-links a {
   color: var(--muted);
   text-decoration: none;
   font-weight: 600;
   font-size: 0.95rem;
   transition: color 0.15s ease;
 }
-.nav a:hover { color: var(--text); }
+.nav-links a:hover { color: var(--text); }
 
 .badge {
-  margin-left: auto;
-  font-size: 0.8rem;
-  font-weight: 600;
+  min-width: 26px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--brand);
-  background: rgba(109, 139, 255, 0.12);
+  background: rgba(109, 139, 255, 0.14);
   border: 1px solid rgba(109, 139, 255, 0.35);
-  padding: 5px 12px;
+  padding: 4px 9px;
   border-radius: 999px;
 }
 
-/* Card */
+/* ---------- Card ---------- */
 .card {
+  position: relative;
   background: linear-gradient(180deg, var(--card), var(--bg-soft));
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 30px 28px;
+  padding: 28px 26px;
   animation: rise 0.3s ease both;
 }
 
@@ -92,21 +112,22 @@ body {
   color: transparent;
 }
 
-/* Form */
-form {
+/* ---------- Add form ---------- */
+.add {
   display: flex;
   gap: 10px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 input[type="text"] {
   flex: 1;
+  min-width: 0;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 14px;
   color: var(--text);
-  font-size: 0.98rem;
+  font-size: 1rem; /* >=16px avoids iOS zoom-on-focus */
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -121,25 +142,52 @@ button {
   font: inherit;
   font-weight: 600;
   border-radius: 10px;
+  color: var(--text);
+  background: transparent;
+  transition: transform 0.08s ease, filter 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+button:active { transform: translateY(1px); }
+
+.primary {
   padding: 12px 18px;
   color: white;
   background: linear-gradient(90deg, var(--brand), var(--brand-2));
-  transition: transform 0.08s ease, filter 0.15s ease;
 }
-button:hover { filter: brightness(1.08); }
-button:active { transform: translateY(1px); }
+.primary:hover { filter: brightness(1.08); }
 
 .error {
   color: var(--danger);
   background: rgba(255, 107, 129, 0.1);
   border: 1px solid rgba(255, 107, 129, 0.3);
   border-radius: 10px;
-  padding: 10px 14px;
-  margin: 0 0 16px;
+  padding: 9px 13px;
+  margin: 0 0 14px;
   font-size: 0.9rem;
 }
 
-/* List */
+/* ---------- Filters ---------- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.chip {
+  padding: 7px 13px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.chip:hover { color: var(--text); }
+.chip.on {
+  color: white;
+  border-color: transparent;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+}
+
+/* ---------- List ---------- */
 .list {
   list-style: none;
   margin: 0;
@@ -152,41 +200,150 @@ button:active { transform: translateY(1px); }
 .list li {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 12px 14px;
-  transition: border-color 0.15s ease, transform 0.08s ease;
+  padding: 10px 12px;
+  transition: border-color 0.15s ease;
 }
 .list li:hover { border-color: #36426a; }
+.list li.done .check span { text-decoration: line-through; color: var(--muted); }
 
-.list label {
+.check {
   display: flex;
   align-items: center;
   gap: 12px;
   flex: 1;
+  min-width: 0;
   cursor: pointer;
-  font-size: 1rem;
 }
+.check span { overflow-wrap: anywhere; }
 
 .list input[type="checkbox"] {
   width: 20px;
   height: 20px;
+  flex: none;
   accent-color: var(--ok);
   cursor: pointer;
 }
 
-.ghost {
+/* Quantity stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+}
+.step {
+  width: 30px;
+  height: 30px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text);
   background: transparent;
-  color: var(--muted);
-  padding: 6px 10px;
   border-radius: 8px;
 }
-.ghost:hover {
-  background: rgba(255, 107, 129, 0.12);
-  color: var(--danger);
-  filter: none;
+.step:hover { background: rgba(109, 139, 255, 0.18); color: var(--brand); }
+.qty {
+  min-width: 22px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 
+.ghost {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  color: var(--muted);
+  border-radius: 8px;
+}
+.ghost:hover { background: rgba(255, 107, 129, 0.14); color: var(--danger); }
+
+/* ---------- Empty + footer ---------- */
+.empty {
+  text-align: center;
+  padding: 36px 10px;
+  color: var(--muted);
+}
+.empty-emoji { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.muted { color: var(--muted); font-size: 0.9rem; }
+.link {
+  color: var(--muted);
+  font-size: 0.88rem;
+  padding: 4px 6px;
+}
+.link:hover { color: var(--danger); }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  background: #221a2e;
+  border: 1px solid rgba(255, 107, 129, 0.4);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  animation: toastin 0.22s ease both;
+}
+@keyframes toastin {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.toast-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  flex: none;
+}
+.toast-x {
+  color: var(--muted);
+  padding: 2px 6px;
+  margin-left: 4px;
+}
+.toast-x:hover { color: var(--text); }
+
 a { color: var(--brand); }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 560px) {
+  .app { padding: 0 12px 56px; }
+  .card { padding: 20px 16px; border-radius: 12px; }
+  .card h1 { font-size: 1.45rem; }
+  .nav { gap: 10px; padding: 14px 2px; }
+  .nav-links { gap: 12px; }
+  .add { flex-wrap: wrap; }
+  .primary { flex: 1; }
+  .list li { flex-wrap: wrap; }
+  .check { flex-basis: 100%; }
+  .stepper { margin-left: auto; }
+  .toast { left: 12px; right: 12px; transform: none; max-width: none; }
+  @keyframes toastin {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
