@@ -55,12 +55,19 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
 - **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
   `/springreact/springreact.js`. Consumers ship no frontend files.
 
-## Documentation
+## Documentation & example
 
 Beginner-friendly guides with copy-paste examples live in **[`docs/`](docs/README.md)** —
 one page per feature, plus a full [Todo app tutorial](docs/11-tutorial-todo-app.md) and a
 [How It Works](docs/12-how-it-works.md) deep dive. Start at
 [Getting Started](docs/01-getting-started.md).
+
+A complete **runnable example** is in **[`examples/todo`](examples/todo)** (validated form,
+keyed list, shared layout with a live badge, two routes — all Kotlin, no frontend files):
+
+```bash
+cd examples/todo && gradle bootRun   # → http://localhost:8080
+```
 
 ## Module layout
 
