@@ -41,7 +41,10 @@ dependencyManagement {
 dependencies {
     api("org.springframework.boot:spring-boot-starter-web")
     api("org.springframework.boot:spring-boot-starter-websocket")
+    api("org.springframework.boot:spring-boot-starter-validation")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin")
     api(kotlin("stdlib"))
+    api(kotlin("reflect"))
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

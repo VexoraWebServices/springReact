@@ -2,6 +2,20 @@ import { createElement, Fragment, type ReactNode } from 'react'
 import { useServerComponent, type Call, type UiNode } from './live'
 import { widgetRegistry } from './widgets'
 
+// Gather a form's named fields into a plain object (checkboxes → boolean).
+function collectForm(e: any): Record<string, unknown> {
+  const form: HTMLFormElement | null = e?.currentTarget ?? e?.target
+  const data: Record<string, unknown> = {}
+  const elements = form?.elements as any
+  if (elements) {
+    for (const el of Array.from(elements) as any[]) {
+      if (!el?.name) continue
+      data[el.name] = el.type === 'checkbox' ? el.checked : el.value
+    }
+  }
+  return data
+}
+
 // Turn a server-sent UI node into real React elements.
 // - event props { onClick: { $action, args, event } } become handlers that call the server
 // - tag "$widget" renders a registered custom React component
@@ -24,10 +38,16 @@ function render(node: UiNode | null, call: Call, slot: ReactNode, key?: string |
   const props: Record<string, unknown> = { key }
   for (const [name, value] of Object.entries(rawProps)) {
     if (name.startsWith('on') && value && typeof value === 'object' && '$action' in value) {
-      const binding = value as { $action: string; args?: unknown[]; event?: string }
+      const binding = value as {
+        $action: string
+        args?: unknown[]
+        event?: string
+        form?: boolean
+      }
       props[name] = (e: any) => {
         if (name === 'onSubmit') e?.preventDefault?.()
         const args: unknown[] = []
+        if (binding.form) args.push(collectForm(e))
         if (binding.event) args.push(e?.target?.[binding.event])
         if (binding.args) args.push(...binding.args)
         call(binding.$action, ...args)

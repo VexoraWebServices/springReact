@@ -72,6 +72,7 @@ object Html {
 
     @JvmStatic fun cls(value: String) = Attr { it.props["className"] = value }
     @JvmStatic fun attr(key: String, value: Any?) = Attr { it.props[key] = value }
+    @JvmStatic fun name(value: String) = attr("name", value)
     @JvmStatic fun id(value: String) = attr("id", value)
     @JvmStatic fun href(value: String) = attr("href", value)
     @JvmStatic fun type(value: String) = attr("type", value)
@@ -82,18 +83,22 @@ object Html {
 
     // --- event bindings (resolved to server actions by the client) --------------
 
-    @JvmStatic fun onClick(action: String, vararg args: Any?) = event("onClick", action, null, args)
-    @JvmStatic fun onChange(action: String, vararg args: Any?) = event("onChange", action, null, args)
-    @JvmStatic fun onChangeValue(action: String, vararg args: Any?) = event("onChange", action, "value", args)
-    @JvmStatic fun onSubmit(action: String, vararg args: Any?) = event("onSubmit", action, null, args)
+    @JvmStatic fun onClick(action: String, vararg args: Any?) = event("onClick", action, null, false, args)
+    @JvmStatic fun onChange(action: String, vararg args: Any?) = event("onChange", action, null, false, args)
+    @JvmStatic fun onChangeValue(action: String, vararg args: Any?) = event("onChange", action, "value", false, args)
 
-    private fun event(key: String, action: String, eventField: String?, args: Array<out Any?>): Attr = Attr { e ->
-        val binding = LinkedHashMap<String, Any?>()
-        binding["\$action"] = action
-        if (eventField != null) binding["event"] = eventField
-        if (args.isNotEmpty()) binding["args"] = args.toList()
-        e.props[key] = binding
-    }
+    /** Submit: the client gathers the form's named fields into an object passed as arg 0. */
+    @JvmStatic fun onSubmit(action: String, vararg args: Any?) = event("onSubmit", action, null, true, args)
+
+    private fun event(key: String, action: String, eventField: String?, form: Boolean, args: Array<out Any?>): Attr =
+        Attr { e ->
+            val binding = LinkedHashMap<String, Any?>()
+            binding["\$action"] = action
+            if (eventField != null) binding["event"] = eventField
+            if (form) binding["form"] = true
+            if (args.isNotEmpty()) binding["args"] = args.toList()
+            e.props[key] = binding
+        }
 
     // --- internals --------------------------------------------------------------
 

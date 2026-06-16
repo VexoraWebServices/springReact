@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.springreact.jsc.ServerComponent
 import io.springreact.jsc.UiNode
 import io.springreact.jsc.UiTreeDiff
+import jakarta.validation.Validator
 import org.slf4j.LoggerFactory
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
@@ -33,6 +34,7 @@ interface LiveBroadcaster {
 open class LiveWebSocketHandler(
     private val registry: LiveComponentRegistry,
     private val objectMapper: ObjectMapper,
+    private val validator: Validator? = null,
 ) : TextWebSocketHandler(), LiveBroadcaster {
 
     private val log = LoggerFactory.getLogger(LiveWebSocketHandler::class.java)
@@ -136,11 +138,32 @@ open class LiveWebSocketHandler(
         val method = descriptor.action(action) ?: throw IllegalArgumentException("Unknown action '$action'")
         val paramTypes = method.parameterTypes
         val callArgs = arrayOfNulls<Any?>(paramTypes.size)
+        // A LiveErrors parameter is injected (and validated against the preceding form
+        // argument) rather than read from the client's args; other params map to JSON args.
+        var jsonIndex = 0
+        var lastArg: Any? = null
         for (i in paramTypes.indices) {
-            val arg = if (args != null && args.has(i)) args.get(i) else null
-            callArgs[i] = coerce(arg, paramTypes[i])
+            val pt = paramTypes[i]
+            if (pt == LiveErrors::class.java) {
+                val errors = LiveErrors()
+                lastArg?.let { validate(it, errors) }
+                callArgs[i] = errors
+            } else {
+                val arg = if (args != null && args.has(jsonIndex)) args.get(jsonIndex) else null
+                val coerced = coerce(arg, pt)
+                callArgs[i] = coerced
+                lastArg = coerced
+                jsonIndex++
+            }
         }
         method.invoke(instance, *callArgs)
+    }
+
+    private fun validate(form: Any, errors: LiveErrors) {
+        val v = validator ?: return
+        for (violation in v.validate(form)) {
+            errors.reject(violation.propertyPath.toString(), violation.message)
+        }
     }
 
     private fun coerce(node: JsonNode?, targetType: Class<*>): Any? {

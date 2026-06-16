@@ -2,6 +2,8 @@ package io.springreact.live
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.springreact.autoconfigure.ReactAutoConfiguration
+import jakarta.validation.Validator
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -41,8 +43,11 @@ class LiveAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun liveWebSocketHandler(registry: LiveComponentRegistry, objectMapper: ObjectMapper) =
-        LiveWebSocketHandler(registry, objectMapper)
+    fun liveWebSocketHandler(
+        registry: LiveComponentRegistry,
+        objectMapper: ObjectMapper,
+        validators: ObjectProvider<Validator>,
+    ) = LiveWebSocketHandler(registry, objectMapper, validators.ifAvailable)
 
     /** The handler is the broadcaster; expose it so services/components can inject it. */
     @Bean
