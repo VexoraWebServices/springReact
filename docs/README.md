@@ -1,11 +1,13 @@
 # SpringReact Documentation
 
+← Back to the [project README](../README.md).
+
 New here? Read these in order. Every page is written for beginners, with copy-paste
 examples you can run.
 
 1. [Getting Started](01-getting-started.md) — your first screen in 5 minutes
 2. [Server Components](02-server-components.md) — `@LiveComponent`, `@LiveState`, `@LiveAction`
-3. [The HTML DSL](03-html-dsl.md) — building UI in Kotlin/Java
+3. [The HTML DSL](03-html-dsl.md) — building UI in Kotlin
 4. [Routing & Layouts](04-routing-and-layouts.md) — `@Route`, navigation, shared layouts
 5. [Forms & Validation](05-forms-and-validation.md) — typed forms with error messages
 6. [Realtime Broadcast](06-realtime-broadcast.md) — push updates to every user
