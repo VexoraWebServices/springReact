@@ -1,135 +1,96 @@
-# SpringReact — Java/Kotlin Server Components for Spring Boot
+# SpringReact
 
-A Spring Boot starter for a new view technology: **author your React screens in Java or
-Kotlin**, render them on the JVM, and stream the React element tree — and **incremental
-patches** — to a universal client over **one WebSocket**.
+A **Kotlin-first Spring Boot framework** for building React UIs without leaving the JVM.
+You write screens as **Kotlin (or Java) server components**; the framework renders them to
+a React element tree, streams it (and incremental patches) to a runtime it **bundles inside
+its own jar**, and reconciles it with real React over **one WebSocket**.
 
-Think *Thymeleaf, but the template is type-safe Java/Kotlin and the renderer is real
-React.* No per-screen `.tsx`, no REST endpoints, no client state store. One process, one
-port, one JAR.
-
-```java
-@LiveComponent("Home")
-public class HomeView implements ServerComponent {
-
-    private final TodoService todos;            // full Spring DI
-    public HomeView(TodoService todos) { this.todos = todos; }
-
-    @LiveState int count = 0;                    // state lives in the JVM
-    @LiveAction void increment() { count++; }
-
-    public UiNode render() {                     // your "template", in Java
-        return div(cls("card"),
-            h1("Hello"),
-            button(onClick("increment"), "Count: " + count),
-            widget("StarRating", attr("value", count), attr("action", "increment")));
-    }
-}
-```
+Like Thymeleaf: add the dependency, write components, run. **No separate frontend project,
+no npm, no REST glue.** One process, one port, one jar.
 
 ```kotlin
-@LiveComponent("Greet")
-class GreetView : ServerComponent {
-    @field:LiveState var who = "world"
-    @LiveAction fun setName(v: String) { who = v }
+@LiveComponent("Home")
+@Route("/", layout = "Main")
+class HomeScreen(private val greetings: GreetingService) : ServerComponent {
+
+    @LiveState var count = 0
+    @LiveAction fun increment() { count++ }
+
     override fun render(): UiNode =
-        div(cls("card"), h1("Hi, $who"),
-            input(value(who), onChangeValue("setName")))
+        div(cls("card"),
+            h1(greetings.hello("world")),
+            button(onClick("increment"), "Count: $count"))
 }
 ```
 
-## What's in the box
+## Features
 
-| Piece | What it does |
-|---|---|
-| **`io.springreact.jsc`** | The Java/Kotlin "JSX" DSL (`Html`), `UiNode` tree, `ServerComponent`, and `UiTreeDiff` (server-side tree diffing). |
-| **`io.springreact.live`** | The single-WebSocket transport: `@LiveComponent`/`@LiveState`/`@LiveAction`, component registry, the `/live` handler. |
-| **`io.springreact.web`** | Thymeleaf-style `ReactViewResolver`/`ReactView` that render the HTML shell. |
-| **`io.springreact.autoconfigure`** | Auto-config + Vite manifest/dev-server integration. |
-| **`client/`** | The universal client runtime (npm package `@springreact/client`): `ServerView`, the one-WebSocket hooks, patch application, and the custom-widget registry. |
+- **Server components** — `@LiveComponent` + `ServerComponent.render()` in Kotlin or Java,
+  with full Spring DI. State lives in the JVM (`@LiveState`); events are `@LiveAction`s.
+- **One WebSocket transport** — no REST, no client store. Full tree on mount, minimal
+  **diff patches** after that.
+- **Routing & client navigation** — `@Route("/path", layout="Main")` declares a screen's
+  URL (no controller needed). The bundled runtime does client-side navigation (no full
+  reload) via the injected `window.__ROUTES__` table.
+- **Layouts** — `Html.slot()`; a layout component stays mounted while the inner screen
+  (keyed by view) swaps on navigation.
+- **Realtime broadcast** — inject `LiveBroadcaster`; `broadcast("Component")` re-renders
+  every mounted client (live dashboards, presence, chat).
+- **Forms + validation** — `onSubmit` binds named fields to a typed Kotlin DTO; a
+  `LiveErrors` parameter is filled from Bean Validation before your action runs.
+- **Keyed reconciliation** — `key()` on list children → minimal `keyed` patches on
+  reorder/insert/remove (no index churn).
+- **Custom widgets** — `widget("Name", attr(...))` renders a registered client React
+  component (charts, canvas, animations) while logic stays on the server.
+- **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
+  `/springreact/springreact.js`. Consumers ship no frontend files.
 
-## How it works
+## Module layout
 
 ```
-Browser                          Spring Boot (one process, one port)
-  │  GET /                        ┌──────────────────────────────────────┐
-  ├──────────────────────────────►│ @Controller returns "Home"           │
-  │  HTML shell: <ServerView/>     │ ReactViewResolver renders the shell  │
-  │◄──────────────────────────────┤                                      │
-  │  ws://…/live   (ONE socket)    │ LiveWebSocketHandler                 │
-  │  mount "Home" ────────────────►│  → create HomeView (DI'd bean)       │
-  │◄── tree (full React VDOM) ─────┤  → HomeView.render() → UiNode tree   │
-  │  call increment ──────────────►│  → @LiveAction mutates @LiveState    │
-  │◄── patch (minimal diff) ───────┤  → re-render + UiTreeDiff vs last    │
-  └────────────────────────────────└──────────────────────────────────────┘
-        ServerView applies patches and reconciles with React
+SpringReact/                       (Kotlin, build.gradle.kts)
+├── src/main/kotlin/io/springreact/
+│   ├── jsc/        Html DSL, UiNode/Element/Text/Attr, ServerComponent, UiTreeDiff
+│   ├── live/       @LiveComponent/@LiveState/@LiveAction, registry, WebSocket handler,
+│   │               LiveBroadcaster, LiveErrors, auto-config
+│   ├── web/        @Route + RouteRegistry, ReactView/ReactViewResolver
+│   └── autoconfigure/  ReactProperties, ReactRenderer, ReactAutoConfiguration
+├── src/test/kotlin/io/springreact/it/   integration tests (live, routing, broadcast,
+│                                        forms, keyed) — drive the real /live socket
+└── client/         the bundled runtime (esbuild): ServerView, Router, hooks, patch
+                    application, widget registry  (+ vitest unit tests)
 ```
 
-- **Diffing.** Mount sends the full tree once; every later update sends only a patch
-  (`text` / `props` / `insert` / `remove` / `replace` ops addressed by child-index path).
-  The client applies it to a shadow tree and re-renders.
-- **Custom widgets.** `widget("StarRating", attr(...))` renders a real client React
-  component registered via `registerWidget("StarRating", StarRating)` — rich UI (charts,
-  canvas, animations) embedded in a Java/Kotlin screen, with a `call` to fire server
-  actions. Logic stays on the server.
-- **DI.** `@LiveComponent` is a prototype `@Component`; constructor-inject any bean.
-- **Java *and* Kotlin.** Identical API; in Kotlin annotate state with `@field:LiveState`.
-
-## Using it in your app
-
-**1. Backend** — add the starter, write screens:
-
-```java
-@Controller
-class Routes {
-    @GetMapping("/") String home() { return "Home"; }   // → @LiveComponent("Home")
-}
-```
-
-**2. Frontend** — one tiny entry; the screens live in Java/Kotlin:
-
-```tsx
-import { createRoot } from 'react-dom/client'
-import { ServerView, registerWidget } from '@springreact/client'
-import StarRating from './StarRating'          // your custom widgets (optional)
-
-registerWidget('StarRating', StarRating)
-createRoot(document.getElementById('root')!).render(<ServerView name={window.__VIEW__} />)
-```
-
-Build the frontend with Vite (backend-integration mode); the starter serves the shell and
-auto-detects DEV (Vite dev server) vs PROD (hashed assets from the build manifest), and
-can manage the Vite process for you in DEV (`spring.react.manage-dev-server`).
-
-## Build & test
+## Build & test — one command
 
 ```bash
-./gradlew test      # boots Spring, drives /live — verifies Java + Kotlin, diffing, widgets, DI
-./gradlew build     # produces the plugin jar + sources jar
-(cd client && npm install && npm run typecheck)   # verifies the client runtime
+./gradlew build
 ```
 
-### What the tests prove (`src/test`)
+Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- mount `JavaCounter` → a **full tree** with the injected `GreetingService` output, the
-  `Count: 0` text, and a `$widget` node (`StarRating`, `value:0`).
-- `increment` → a **patch** carrying only `Count: 1` (the unchanged subtree is *not* resent).
-- `rate(5)` → a **patch** setting only the widget's `value:5`.
-- `KotlinGreet` mounts and patches the same way — same plugin, Kotlin source.
+- **8 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+  widgets, diffing), shell + routing, broadcast (two clients), form validation, keyed
+  reconciliation.
+- **11 client unit tests** (vitest) — patch application, route resolution, keyed ops —
+  plus a TypeScript typecheck.
 
-## Configuration (`application.properties`)
+`npm install` and the client tests run automatically as Gradle tasks; no manual steps.
 
-| Property                          | Default                 | Meaning                              |
-|-----------------------------------|-------------------------|--------------------------------------|
-| `spring.react.mode`               | `AUTO`                  | `AUTO` \| `DEV` \| `PROD`             |
-| `spring.react.dev-server-url`     | `http://localhost:5173` | Vite dev server (DEV)                |
-| `spring.react.manage-dev-server`  | `true`                  | Spring starts/stops Vite in DEV      |
-| `spring.react.frontend-dir`       | `frontend`              | where `package.json` lives           |
-| `spring.react.entry`              | `src/main.tsx`          | Vite entry (`rollupOptions.input`)   |
-| `spring.react.title`              | `Spring React`          | default `<title>`                    |
+## Configuration (`spring.react.*`)
+
+| Property                       | Default                       | Meaning                                  |
+|--------------------------------|-------------------------------|------------------------------------------|
+| `spring.react.title`           | `SpringReact`                 | default `<title>`                        |
+| `spring.react.runtime-path`    | `/springreact/springreact.js` | URL of the bundled runtime               |
+| `spring.react.allowed-origins` | `*`                           | `/live` WebSocket origin allowlist       |
+
+## Versions
+
+Kotlin 2.1.0 · Spring Boot 3.4.1 · Java 21 toolchain · Gradle Kotlin DSL ·
+node-gradle 7.1.0 (system Node) · React 18 (bundled).
 
 ## Roadmap
 
-- `key`-based list reconciliation for stable reorder/animation.
-- Broadcast re-renders (push to all mounted clients — live dashboards, presence).
-- Publish `@springreact/client` and the starter to a registry.
+Suspense-style streaming render · action-level authorization (Spring Security on the
+socket) · a project starter/initializer · publishing to Maven Central.
