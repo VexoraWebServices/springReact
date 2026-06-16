@@ -11,8 +11,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 /**
- * Auto-configuration that wires the React view machinery into any Spring Boot servlet
- * web app that has this starter on its classpath. No manual setup required.
+ * Auto-configures the HTML-shell rendering: controllers return a view name, the
+ * {@link ReactViewResolver} renders the shell, and the bundled runtime mounts the
+ * matching Java/Kotlin Server Component. Active in any servlet web app with this
+ * framework on the classpath — no manual setup.
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -21,26 +23,13 @@ public class ReactAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ReactManifest reactManifest(ReactProperties properties, ObjectMapper objectMapper) {
-        return new ReactManifest(objectMapper, properties.getManifestLocation());
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public ReactRenderer reactRenderer(ReactProperties properties, ReactManifest manifest,
-                                       ObjectMapper objectMapper) {
-        return new ReactRenderer(properties, manifest, objectMapper);
+    public ReactRenderer reactRenderer(ReactProperties properties, ObjectMapper objectMapper) {
+        return new ReactRenderer(properties, objectMapper);
     }
 
     @Bean
     @ConditionalOnMissingBean
     public ReactViewResolver reactViewResolver(ReactRenderer renderer) {
         return new ReactViewResolver(renderer);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public ViteDevServerManager viteDevServerManager(ReactProperties properties, ReactRenderer renderer) {
-        return new ViteDevServerManager(properties, renderer);
     }
 }

@@ -1,24 +1,20 @@
 {
-  "name": "@springreact/client",
+  "name": "springreact-runtime",
   "version": "0.1.0",
-  "description": "Universal client runtime for SpringReact Java Server Components",
+  "private": true,
+  "description": "Internal: the React runtime that SpringReact bundles into its jar and serves automatically. Consumers never install this.",
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
-  "files": [
-    "src"
-  ],
   "scripts": {
+    "build": "esbuild src/bootstrap.tsx --bundle --format=iife --minify --jsx=automatic --target=es2020 --outfile=dist/springreact.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
-  },
-  "peerDependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "esbuild": "^0.24.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

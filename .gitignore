@@ -2,8 +2,9 @@
 .gradle/
 build/
 
-# Node
+# Node / bundled-runtime build artifacts
 node_modules/
+client/dist/
 
 # IDE
 .idea/
