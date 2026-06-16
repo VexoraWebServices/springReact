@@ -127,6 +127,27 @@ Open <http://localhost:8080>:
 You just built a multi-page, realtime, validated app with **no REST controllers, no
 frontend project, and no npm**.
 
+## The full showcase version
+
+The runnable [`examples/todo`](../examples/todo) goes further and demonstrates most
+concepts in one screen — a good reference to copy from:
+
+- **Mobile-responsive** layout (`static/app.css` with a media query) wired via
+  `spring.react.stylesheets=/app.css`.
+- **Quantity stepper** (`+`/`−`) per item — `@LiveAction inc(id)` / `dec(id)` updating a
+  server-side `qty`.
+- **Input that clears after add** — an uncontrolled input with `key("draft-$inputVersion")`;
+  bumping the version remounts it empty on success, but keeps the text on error/duplicate.
+- **Duplicate name → toast** (not a dialog): a case-insensitive check sets a `toast`
+  message that **auto-dismisses ~2.5s later from a background thread** (`LiveContext.handle()`
+  → `update()`), showing the async self-update pattern.
+- **Inline validation** for empty input (`@field:NotBlank` + `LiveErrors`).
+- **Filters** (All / Active / Done) with counts, an **empty state**, a "N left" footer, and
+  a **live count badge** in the layout via `LiveBroadcaster`.
+
+> Kotlin gotcha used here: the filter state is named `tab`, because a `var filter` would
+> generate a `setFilter` method that clashes with the `setFilter` action.
+
 ## What to try next
 
 - [ ] Add `@LiveAuthorize("ADMIN")` to `remove` and a `LiveSecurity` bean
