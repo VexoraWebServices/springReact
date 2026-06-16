@@ -62,6 +62,16 @@ A complete minimal app using the plugin is in
 [`examples/minimal`](../examples/minimal) — a single `build.gradle.kts` with the plugin and
 one screen.
 
+## Scaffold a new app
+
+`tools/create-springreact.sh` generates a ready-to-run project (build file + a screen +
+the Gradle wrapper):
+
+```bash
+./tools/create-springreact.sh my-app com.acme.myapp 0.1.0
+cd my-app && ./gradlew bootRun
+```
+
 ## TODO checklist
 
 - [ ] Add `id("io.springreact") version "0.1.0"` to `plugins { }`
