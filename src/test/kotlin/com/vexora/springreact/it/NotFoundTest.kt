@@ -37,6 +37,6 @@ class NotFoundTest {
         assertThat(response.statusCode.value()).isEqualTo(404)
         assertThat(response.body)
             .contains("""window.__VIEW__ = "NotFound"""")
-            .contains("""<script src="/springreact/springreact.js">""")
+            .contains("""<script src="/springreact/springreact.js?""")
     }
 }

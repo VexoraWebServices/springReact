@@ -73,6 +73,18 @@ class ReactRenderer(
 ) {
     private class Ssr(val rootHtml: String, val trees: Map<String, Any?>)
 
+    // Cache-busting token for the bundled runtime URL: the framework version in prod
+    // (stable across restarts), or a per-startup token in dev — so a browser never serves
+    // a stale springreact.js against a newer server.
+    private val runtimeToken: String =
+        javaClass.`package`?.implementationVersion ?: System.nanoTime().toString(36)
+
+    private fun runtimeSrc(): String {
+        val path = properties.runtimePath
+        val sep = if (path.contains('?')) "&" else "?"
+        return "$path${sep}v=$runtimeToken"
+    }
+
     @JvmOverloads
     fun render(
         viewName: String,
@@ -117,7 +129,7 @@ class ReactRenderer(
             </head>
             <body>
               <div id="root">$rootContent</div>
-              <script src="${HtmlUtils.htmlEscape(properties.runtimePath)}"></script>
+              <script src="${HtmlUtils.htmlEscape(runtimeSrc())}"></script>
             </body>
             </html>
         """.trimIndent() + "\n"

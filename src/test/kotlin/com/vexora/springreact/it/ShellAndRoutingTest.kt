@@ -22,7 +22,7 @@ class ShellAndRoutingTest {
         assertThat(html)
             .contains("""<div id="root">""")
             .contains("""window.__VIEW__ = "Home"""")
-            .contains("""<script src="/springreact/springreact.js">""")
+            .contains("""<script src="/springreact/springreact.js?""")
     }
 
     @Test
