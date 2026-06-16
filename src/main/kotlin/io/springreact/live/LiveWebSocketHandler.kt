@@ -13,27 +13,46 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * The single WebSocket endpoint that powers all live/server components. It keeps a
- * per-session map of mounted instances and routes `mount` / `call` / `unmount`.
+ * Push re-renders to clients without a client request — for live dashboards, presence,
+ * chat, etc. Call [broadcast] (e.g. from a service after shared state changes) and every
+ * mounted instance of the component re-renders and receives a patch.
+ */
+interface LiveBroadcaster {
+    /** Re-render every mounted instance of [component] across all sessions. */
+    fun broadcast(component: String)
+}
+
+/**
+ * The single WebSocket endpoint that powers all live/server components. Keeps per-session
+ * mounted instances, routes `mount` / `call` / `unmount`, and tracks mounts globally so it
+ * can [broadcast] server-initiated updates.
  *
- * For a [ServerComponent] the first send is the full tree (`t:"tree"`); every later send
- * is a minimal `t:"patch"` diff. Plain components send `@LiveState` as `t:"state"`.
+ * For a [ServerComponent] the first send is the full tree (`t:"tree"`); every later send is
+ * a minimal `t:"patch"` diff. Plain components send `@LiveState` as `t:"state"`.
  */
 open class LiveWebSocketHandler(
     private val registry: LiveComponentRegistry,
     private val objectMapper: ObjectMapper,
-) : TextWebSocketHandler() {
+) : TextWebSocketHandler(), LiveBroadcaster {
 
     private val log = LoggerFactory.getLogger(LiveWebSocketHandler::class.java)
+
+    /** component name -> live mounts across all sessions (for broadcast). */
+    private val mounts = ConcurrentHashMap<String, MutableSet<MountRef>>()
+
+    private data class MountRef(val session: WebSocketSession, val id: String, val component: String)
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
         session.attributes[INSTANCES] = ConcurrentHashMap<String, Any>()
         session.attributes[TREES] = ConcurrentHashMap<String, UiNode>()
+        session.attributes[REFS] = ConcurrentHashMap<String, MountRef>()
     }
 
     override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+        refs(session).values.forEach { mounts[it.component]?.remove(it) }
         session.attributes.remove(INSTANCES)
         session.attributes.remove(TREES)
+        session.attributes.remove(REFS)
     }
 
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
@@ -44,8 +63,12 @@ open class LiveWebSocketHandler(
         try {
             when (type) {
                 "mount" -> {
-                    val instance = registry.create(msg.path("c").asText())
+                    val component = msg.path("c").asText()
+                    val instance = registry.create(component)
                     instances[id] = instance
+                    val ref = MountRef(session, id, component)
+                    refs(session)[id] = ref
+                    mounts.computeIfAbsent(component) { ConcurrentHashMap.newKeySet() }.add(ref)
                     renderInitial(session, id, instance)
                 }
                 "call" -> {
@@ -60,12 +83,26 @@ open class LiveWebSocketHandler(
                 "unmount" -> {
                     instances.remove(id)
                     trees(session).remove(id)
+                    refs(session).remove(id)?.let { mounts[it.component]?.remove(it) }
                 }
                 else -> sendError(session, id, "Unknown message type: '$type'")
             }
         } catch (ex: Exception) {
             log.warn("Live message failed (type={}, id={}): {}", type, id, ex.message)
             sendError(session, id, ex.message)
+        }
+    }
+
+    override fun broadcast(component: String) {
+        val refs = mounts[component] ?: return
+        for (ref in refs) {
+            if (!ref.session.isOpen) continue
+            try {
+                val instance = instances(ref.session)[ref.id] ?: continue
+                renderUpdate(ref.session, ref.id, instance)
+            } catch (ex: Exception) {
+                log.warn("Broadcast to {} failed: {}", ref.id, ex.message)
+            }
         }
     }
 
@@ -148,8 +185,13 @@ open class LiveWebSocketHandler(
     private fun trees(session: WebSocketSession) =
         session.attributes[TREES] as MutableMap<String, UiNode>
 
+    @Suppress("UNCHECKED_CAST")
+    private fun refs(session: WebSocketSession) =
+        session.attributes[REFS] as MutableMap<String, MountRef>
+
     companion object {
         private const val INSTANCES = "live.instances"
         private const val TREES = "live.trees"
+        private const val REFS = "live.refs"
     }
 }

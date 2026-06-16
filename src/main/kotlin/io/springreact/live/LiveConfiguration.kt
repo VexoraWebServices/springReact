@@ -43,4 +43,9 @@ class LiveAutoConfiguration {
     @ConditionalOnMissingBean
     fun liveWebSocketHandler(registry: LiveComponentRegistry, objectMapper: ObjectMapper) =
         LiveWebSocketHandler(registry, objectMapper)
+
+    /** The handler is the broadcaster; expose it so services/components can inject it. */
+    @Bean
+    @ConditionalOnMissingBean
+    fun liveBroadcaster(handler: LiveWebSocketHandler): LiveBroadcaster = handler
 }
