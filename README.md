@@ -165,6 +165,7 @@ jump to what you need.
 17. [The Gradle Plugin](docs/17-gradle-plugin.md) — one-line project setup
 18. [Publishing](docs/18-publishing.md) — release to Maven Central
 12. [How It Works](docs/12-how-it-works.md) — the architecture, end to end
+- [**Frontend for a REST API**](docs/21-frontend-for-an-api.md) — use SpringReact with your existing Spring Boot API
 
 **Tutorial**
 11. [Build a Todo App](docs/11-tutorial-todo-app.md) — a complete app, step by step
@@ -175,6 +176,7 @@ jump to what you need.
 |---|---|
 | [`examples/minimal`](examples/minimal) | The smallest app — one screen via the Gradle plugin |
 | [`examples/todo`](examples/todo) | Full showcase: validated form, keyed list, quantity steppers, duplicate-name toast, filters, live badge, custom CSS, and a **three.js custom widget** |
+| [`examples/todo-api`](examples/todo-api) | **SpringReact as the frontend for a REST API** — a `/api/todos` JSON API consumed by the UI via `RestClient` |
 
 ```bash
 ./gradlew publishToMavenLocal        # make the framework available locally

@@ -25,6 +25,7 @@ examples you can run.
 18. [Publishing](18-publishing.md) — release to Maven Central
 19. [SSR & Styling](19-ssr-and-styling.md) — server-rendered HTML + CSS
 20. [npm Modules & Tailwind](20-npm-modules-and-tailwind.md) — three.js, charts, Tailwind
+21. [Frontend for a REST API](21-frontend-for-an-api.md) — use SpringReact as the UI for your API
 
 ## The 30-second mental model
 
