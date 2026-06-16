@@ -131,5 +131,6 @@ node-gradle 7.1.0 (system Node) · React 18 (bundled).
 
 ## Roadmap
 
-Toward full Next.js parity: streaming SSR · a project
-starter/initializer · publishing to Maven Central (POM metadata is in place).
+Toward full Next.js parity: streaming SSR (the one hard remaining piece). Shipped:
+Gradle plugin, project initializer (tools/create-springreact.sh), and Maven Central
+publish wiring (signing + sources/javadoc jars, gated on credentials).

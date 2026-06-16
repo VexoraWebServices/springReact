@@ -14,6 +14,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("com.github.node-gradle.node") version "7.1.0"
     `maven-publish`
+    signing
 }
 
 group = "io.springreact"
@@ -22,6 +23,7 @@ version = "0.1.0"
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(21) }
     withSourcesJar()
+    withJavadocJar() // Maven Central requires a javadoc jar
 }
 
 kotlin {
@@ -93,6 +95,21 @@ tasks.named("check") {
 }
 
 publishing {
+    repositories {
+        // Maven Central (Sonatype). Configured only when credentials are present, so a
+        // normal build needs no secrets. Set OSSRH_USERNAME / OSSRH_PASSWORD to publish.
+        val ossrhUser = providers.environmentVariable("OSSRH_USERNAME").orNull
+        if (ossrhUser != null) {
+            maven {
+                name = "central"
+                url = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = ossrhUser
+                    password = providers.environmentVariable("OSSRH_PASSWORD").orNull
+                }
+            }
+        }
+    }
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
@@ -118,5 +135,15 @@ publishing {
                 }
             }
         }
+    }
+}
+
+// Sign the publication for Maven Central — only when a signing key is provided (so local
+// builds don't need GPG). Provide SIGNING_KEY (ASCII-armored) and SIGNING_PASSWORD.
+signing {
+    val signingKey = providers.environmentVariable("SIGNING_KEY").orNull
+    if (signingKey != null) {
+        useInMemoryPgpKeys(signingKey, providers.environmentVariable("SIGNING_PASSWORD").orNull)
+        sign(publishing.publications["maven"])
     }
 }
