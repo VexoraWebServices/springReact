@@ -1,6 +1,7 @@
 package io.springreact.live
 
 import org.springframework.web.socket.WebSocketSession
+import java.util.Locale
 
 /**
  * A keepable handle to one mounted component instance. Call [update] later — e.g. from a
@@ -48,6 +49,13 @@ class LiveContext internal constructor(
 
     /** All values of a handshake request header. */
     fun headers(name: String): List<String> = session.handshakeHeaders[name] ?: emptyList()
+
+    /** The client's preferred locale, parsed from the `Accept-Language` handshake header. */
+    fun locale(): Locale {
+        val accept = header("Accept-Language") ?: return Locale.getDefault()
+        val tag = accept.split(",").firstOrNull()?.split(";")?.firstOrNull()?.trim()
+        return if (tag.isNullOrEmpty()) Locale.getDefault() else Locale.forLanguageTag(tag)
+    }
 
     /** A cookie value from the handshake `Cookie` header. */
     fun cookie(name: String): String? {

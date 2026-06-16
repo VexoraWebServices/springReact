@@ -54,6 +54,8 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
   limiting, blocking).
 - **Lifecycle hooks** — `LiveLifecycle.onMount/onUnmount` (reliable on disconnect) for
   presence, subscriptions, cleanup; plus `LiveContext` access to headers/cookies/principal.
+- **i18n** — `LiveContext.locale()` (from Accept-Language) + Spring `MessageSource` render
+  screens in the user's language.
 - **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
   `/springreact/springreact.js`. Consumers ship no frontend files.
 
@@ -95,7 +97,7 @@ SpringReact/                       (Kotlin, build.gradle.kts)
 
 Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- **20 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+- **22 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
   widgets, diffing), shell + routing, dynamic route params, broadcast (two clients), form
   validation, keyed reconciliation, authorization, async/redirect, 404, middleware, nested layouts, and error boundaries.
 - **18 client unit tests** (vitest) — patch application, route resolution + matching, keyed

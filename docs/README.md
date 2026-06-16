@@ -18,11 +18,12 @@ examples you can run.
 13. [Async, Loading & Redirects](13-async-and-redirects.md) — slow work and server-side navigation
 14. [Middleware](14-middleware.md) — run logic before every action
 15. [Lifecycle & Presence](15-lifecycle-and-presence.md) — onMount/onUnmount, who's-online
+16. [Internationalization](16-i18n.md) — render in the user's language
 
 ## The 30-second mental model
 
 ```
-You write a Kotlin/Java class (a "server component").
+You write a Kotlin class (a "server component").
         │  its render() returns a UI tree, built with the Html DSL
         ▼
 SpringReact sends that tree to the browser over ONE WebSocket.
