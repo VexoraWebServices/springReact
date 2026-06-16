@@ -11,7 +11,7 @@ import io.springreact.web.Route
 
 /** A dynamic route: the {id} segment of the URL is bound to a @LiveParam field on mount. */
 @LiveComponent("User")
-@Route("/users/{id}", layout = "Main", title = "User Detail")
+@Route("/users/{id}", layout = "Main", title = "User Detail", description = "A single user")
 class UserScreen : ServerComponent {
 
     @LiveParam

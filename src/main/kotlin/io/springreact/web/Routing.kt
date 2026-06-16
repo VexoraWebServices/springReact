@@ -17,7 +17,12 @@ import org.springframework.context.ApplicationContext
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Route(val value: String, val layout: String = "", val title: String = "")
+annotation class Route(
+    val value: String,
+    val layout: String = "",
+    val title: String = "",
+    val description: String = "",
+)
 
 /**
  * Marks a `@LiveComponent` as a layout and (optionally) nests it inside a parent layout —
@@ -41,7 +46,12 @@ annotation class Layout(val parent: String = "")
  */
 class RouteRegistry(context: ApplicationContext) {
 
-    data class RouteInfo(val view: String, val layout: String?, val title: String?)
+    data class RouteInfo(
+        val view: String,
+        val layout: String?,
+        val title: String?,
+        val description: String?,
+    )
 
     private val routes = LinkedHashMap<String, RouteInfo>()
     private val layouts = LinkedHashMap<String, String>() // layout name -> parent layout name
@@ -50,7 +60,12 @@ class RouteRegistry(context: ApplicationContext) {
         for (beanName in context.getBeanNamesForAnnotation(Route::class.java)) {
             val route = context.findAnnotationOnBean(beanName, Route::class.java) ?: continue
             val view = context.findAnnotationOnBean(beanName, LiveComponent::class.java)?.value ?: continue
-            routes[route.value] = RouteInfo(view, route.layout.ifEmpty { null }, route.title.ifEmpty { null })
+            routes[route.value] = RouteInfo(
+                view,
+                route.layout.ifEmpty { null },
+                route.title.ifEmpty { null },
+                route.description.ifEmpty { null },
+            )
         }
         for (beanName in context.getBeanNamesForAnnotation(Layout::class.java)) {
             val layout = context.findAnnotationOnBean(beanName, Layout::class.java) ?: continue

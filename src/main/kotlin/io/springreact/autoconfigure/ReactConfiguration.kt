@@ -55,19 +55,31 @@ class ReactRenderer(
     private val objectMapper: ObjectMapper,
     private val routes: RouteRegistry,
 ) {
-    fun render(viewName: String, model: Map<String, *>): String {
+    @JvmOverloads
+    fun render(
+        viewName: String,
+        model: Map<String, *>,
+        pageTitle: String? = null,
+        description: String? = null,
+    ): String {
         val viewJson = writeJson(viewName)
         val modelJson = writeJson(sanitize(model))
         val routesJson = writeJson(routes.toJson())
         val layoutsJson = writeJson(routes.layoutsToJson())
         val notFoundJson = writeJson(properties.notFoundView.ifEmpty { null })
+        val title = pageTitle?.takeIf { it.isNotEmpty() } ?: properties.title
+        val descriptionMeta = if (!description.isNullOrEmpty()) {
+            "\n  <meta name=\"description\" content=\"${HtmlUtils.htmlEscape(description)}\" />"
+        } else {
+            ""
+        }
         return """
             <!doctype html>
             <html lang="en">
             <head>
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>${HtmlUtils.htmlEscape(properties.title)}</title>
+              <title>${HtmlUtils.htmlEscape(title)}</title>$descriptionMeta
               <script>
                 window.__VIEW__ = $viewJson;
                 window.__MODEL__ = $modelJson;
@@ -122,10 +134,12 @@ class ReactAutoConfiguration {
         val builder = RouterFunctions.route()
         for ((path, info) in routes.all()) {
             val view = info.view
+            val title = info.title
+            val description = info.description
             builder.GET(path) { _ ->
                 ServerResponse.ok()
                     .contentType(MediaType.TEXT_HTML)
-                    .body(renderer.render(view, emptyMap<String, Any?>()))
+                    .body(renderer.render(view, emptyMap<String, Any?>(), title, description))
             }
         }
         return builder.build()

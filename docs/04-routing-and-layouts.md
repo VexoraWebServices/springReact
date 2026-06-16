@@ -67,6 +67,13 @@ Set a per-route browser tab title with `title`:
 The runtime updates `document.title` as you navigate. (The default title comes from
 `spring.react.title`.)
 
+For **SEO**, also set a `description` — the server renders `<title>` and
+`<meta name="description">` into the initial HTML so crawlers see them:
+
+```kotlin
+@Route("/users/{id}", title = "User Detail", description = "A single user profile")
+```
+
 ## Layouts (shared chrome)
 
 A layout is just a component with a `slot()` where the current screen goes:
