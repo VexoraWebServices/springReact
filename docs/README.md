@@ -19,6 +19,7 @@ examples you can run.
 14. [Middleware](14-middleware.md) — run logic before every action
 15. [Lifecycle & Presence](15-lifecycle-and-presence.md) — onMount/onUnmount, who's-online
 16. [Internationalization](16-i18n.md) — render in the user's language
+17. [The Gradle Plugin](17-gradle-plugin.md) — one-line project setup
 
 ## The 30-second mental model
 

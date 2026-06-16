@@ -23,6 +23,15 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
 }
 ```
 
+## Quick start (Gradle plugin)
+
+```kotlin
+plugins { id("io.springreact") version "0.1.0" }
+```
+
+That one line configures Kotlin, Spring Boot, dependency management, and the framework. See
+[the Gradle plugin docs](docs/17-gradle-plugin.md) and [`examples/minimal`](examples/minimal).
+
 ## Features
 
 - **Server components** — `@LiveComponent` + `ServerComponent.render()` in Kotlin, with
