@@ -62,25 +62,6 @@ back and React updated the screen.
 | `@LiveAction fun increment()` | "The browser can call this." |
 | `render()` | "Here's what the screen looks like, built in Kotlin." |
 
-## Java instead of Kotlin?
-
-Everything works the same; use static imports:
-
-```java
-import static io.springreact.jsc.Html.*;
-import io.springreact.jsc.*;
-import io.springreact.live.*;
-
-@LiveComponent("Home")
-public class HomeScreen implements ServerComponent {
-    @LiveState int count = 0;
-    @LiveAction void increment() { count++; }
-    public UiNode render() {
-        return div(cls("card"), h1("Hello"), button(onClick("increment"), "Count: " + count));
-    }
-}
-```
-
 ## TODO checklist
 
 - [ ] Add the dependency

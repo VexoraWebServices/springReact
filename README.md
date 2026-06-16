@@ -29,9 +29,10 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
   with full Spring DI. State lives in the JVM (`@LiveState`); events are `@LiveAction`s.
 - **One WebSocket transport** — no REST, no client store. Full tree on mount, minimal
   **diff patches** after that.
-- **Routing & client navigation** — `@Route("/path", layout="Main")` declares a screen's
-  URL (no controller needed). The bundled runtime does client-side navigation (no full
-  reload) via the injected `window.__ROUTES__` table.
+- **Routing & client navigation** — `@Route("/path", layout="Main", title="…")` declares a
+  screen's URL (no controller needed), including **dynamic params** (`/users/{id}` →
+  `@LiveParam`) and per-route titles. The bundled runtime does client-side navigation (no
+  full reload) via the injected `window.__ROUTES__` table.
 - **Layouts** — `Html.slot()`; a layout component stays mounted while the inner screen
   (keyed by view) swaps on navigation.
 - **Realtime broadcast** — inject `LiveBroadcaster`; `broadcast("Component")` re-renders
@@ -78,11 +79,11 @@ SpringReact/                       (Kotlin, build.gradle.kts)
 
 Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- **9 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
-  widgets, diffing), shell + routing, broadcast (two clients), form validation, keyed
-  reconciliation, and authorization.
-- **11 client unit tests** (vitest) — patch application, route resolution, keyed ops —
-  plus a TypeScript typecheck.
+- **11 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+  widgets, diffing), shell + routing, dynamic route params, broadcast (two clients), form
+  validation, keyed reconciliation, and authorization.
+- **14 client unit tests** (vitest) — patch application, route resolution + matching, keyed
+  ops — plus a TypeScript typecheck.
 
 `npm install` and the client tests run automatically as Gradle tasks; no manual steps.
 

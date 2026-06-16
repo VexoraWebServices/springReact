@@ -70,6 +70,7 @@ open class LiveWebSocketHandler(
                 "mount" -> {
                     val component = msg.path("c").asText()
                     val instance = registry.create(component)
+                    applyParams(instance, msg.path("params"))
                     instances[id] = instance
                     val ref = MountRef(session, id, component)
                     refs(session)[id] = ref
@@ -168,6 +169,14 @@ open class LiveWebSocketHandler(
             }
         }
         method.invoke(instance, *callArgs)
+    }
+
+    private fun applyParams(instance: Any, params: JsonNode?) {
+        if (params == null || params.isMissingNode || !params.isObject) return
+        for ((paramName, field) in registry.descriptor(instance).paramFields()) {
+            val node = params.get(paramName) ?: continue
+            field.set(instance, coerce(node, field.type))
+        }
     }
 
     private fun validate(form: Any, errors: LiveErrors) {

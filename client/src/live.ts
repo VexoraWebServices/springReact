@@ -49,7 +49,11 @@ function send(message: unknown) {
 export type Call = (action: string, ...args: unknown[]) => void
 
 // Shared mount/subscribe/unmount lifecycle for any live component on the page.
-function useLiveChannel(component: string, onMessage: MessageListener): Call {
+function useLiveChannel(
+  component: string,
+  onMessage: MessageListener,
+  params?: Record<string, unknown>,
+): Call {
   const idRef = useRef<string>('')
   if (!idRef.current) idRef.current = `${component}-${++counter}`
   const id = idRef.current
@@ -58,11 +62,12 @@ function useLiveChannel(component: string, onMessage: MessageListener): Call {
 
   useEffect(() => {
     listeners.set(id, (msg) => handler.current(msg))
-    connect().then(() => send({ t: 'mount', id, c: component }))
+    connect().then(() => send({ t: 'mount', id, c: component, params: params ?? {} }))
     return () => {
       send({ t: 'unmount', id })
       listeners.delete(id)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, component])
 
   return useCallback((action, ...args) => send({ t: 'call', id, action, args }), [id])
@@ -138,20 +143,24 @@ export function applyOps(root: UiNode, ops: Op[]): UiNode {
  * until the first render arrives) and a `call` to invoke server actions. Handles both the
  * initial full `tree` and incremental `patch` messages.
  */
-export function useServerComponent(component: string) {
+export function useServerComponent(component: string, params?: Record<string, unknown>) {
   const shadow = useRef<UiNode | null>(null)
   const [tree, setTree] = useState<UiNode | null>(null)
 
-  const call = useLiveChannel(component, (msg) => {
-    if (msg.t === 'tree') {
-      shadow.current = msg.tree as UiNode
-      setTree(shadow.current)
-    } else if (msg.t === 'patch' && shadow.current) {
-      const next = applyOps(shadow.current, msg.ops as Op[])
-      shadow.current = next
-      setTree(next)
-    }
-  })
+  const call = useLiveChannel(
+    component,
+    (msg) => {
+      if (msg.t === 'tree') {
+        shadow.current = msg.tree as UiNode
+        setTree(shadow.current)
+      } else if (msg.t === 'patch' && shadow.current) {
+        const next = applyOps(shadow.current, msg.ops as Op[])
+        shadow.current = next
+        setTree(next)
+      }
+    },
+    params,
+  )
 
   return { tree, call }
 }

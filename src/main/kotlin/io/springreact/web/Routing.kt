@@ -17,7 +17,7 @@ import org.springframework.context.ApplicationContext
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Route(val value: String, val layout: String = "")
+annotation class Route(val value: String, val layout: String = "", val title: String = "")
 
 /**
  * Discovers all `@Route` components at startup and exposes the path → (view, layout) map,
@@ -26,7 +26,7 @@ annotation class Route(val value: String, val layout: String = "")
  */
 class RouteRegistry(context: ApplicationContext) {
 
-    data class RouteInfo(val view: String, val layout: String?)
+    data class RouteInfo(val view: String, val layout: String?, val title: String?)
 
     private val routes = LinkedHashMap<String, RouteInfo>()
 
@@ -34,7 +34,7 @@ class RouteRegistry(context: ApplicationContext) {
         for (beanName in context.getBeanNamesForAnnotation(Route::class.java)) {
             val route = context.findAnnotationOnBean(beanName, Route::class.java) ?: continue
             val view = context.findAnnotationOnBean(beanName, LiveComponent::class.java)?.value ?: continue
-            routes[route.value] = RouteInfo(view, route.layout.ifEmpty { null })
+            routes[route.value] = RouteInfo(view, route.layout.ifEmpty { null }, route.title.ifEmpty { null })
         }
     }
 
@@ -46,6 +46,7 @@ class RouteRegistry(context: ApplicationContext) {
             val entry = LinkedHashMap<String, Any?>()
             entry["view"] = info.view
             if (info.layout != null) entry["layout"] = info.layout
+            if (info.title != null) entry["title"] = info.title
             json[path] = entry
         }
         return json

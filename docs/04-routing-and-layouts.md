@@ -34,6 +34,39 @@ Navigate from code (client side, e.g. inside a custom widget):
 window.SpringReact.navigate("/users")
 ```
 
+## Dynamic routes (URL params)
+
+Use `{name}` in the path and bind the value to a field with `@LiveParam`:
+
+```kotlin
+@LiveComponent("User")
+@Route("/users/{id}", layout = "Main", title = "User")
+class UserScreen(private val users: UserRepository) : ServerComponent {
+
+    @LiveParam var id: Int = 0          // filled from the URL on mount
+
+    override fun render(): UiNode {
+        val user = users.findById(id)
+        return div(h1(user.name), p(user.email))
+    }
+}
+```
+
+Visit `/users/42` → `id` is `42` (converted to the field's type). Multiple params work:
+`@Route("/org/{org}/user/{id}")` with `@LiveParam var org: String` and `@LiveParam var id: Int`.
+Navigating from `/users/1` to `/users/2` remounts the screen with the new param.
+
+## Page titles
+
+Set a per-route browser tab title with `title`:
+
+```kotlin
+@Route("/users/{id}", title = "User Detail")
+```
+
+The runtime updates `document.title` as you navigate. (The default title comes from
+`spring.react.title`.)
+
 ## Layouts (shared chrome)
 
 A layout is just a component with a `slot()` where the current screen goes:
@@ -80,7 +113,9 @@ renders   <ServerView name="Main" slot={ <ServerView name="Home"/> } />
 ## TODO checklist
 
 - [ ] Add `@Route` to two screens
+- [ ] Add a dynamic route `/{id}` with a `@LiveParam` field
+- [ ] Give a route a `title`
 - [ ] Create a `Main` layout with `slot()`
-- [ ] Set `layout = "Main"` on both screens
+- [ ] Set `layout = "Main"` on the screens
 - [ ] Click between them — the nav bar stays put
 - [ ] Next: [Forms & Validation](05-forms-and-validation.md)

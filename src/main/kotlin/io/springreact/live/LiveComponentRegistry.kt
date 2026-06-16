@@ -12,8 +12,12 @@ class LiveComponentDescriptor private constructor() {
 
     private val actions = HashMap<String, Method>()
     private val stateFields = ArrayList<Field>()
+    private val paramFields = ArrayList<Pair<String, Field>>()
 
     fun action(name: String): Method? = actions[name]
+
+    /** Route-param name → field, for `@LiveParam` fields. */
+    fun paramFields(): List<Pair<String, Field>> = paramFields
 
     fun readState(instance: Any): Map<String, Any?> {
         val state = LinkedHashMap<String, Any?>()
@@ -35,6 +39,10 @@ class LiveComponentDescriptor private constructor() {
                 if (field.isAnnotationPresent(LiveState::class.java)) {
                     field.isAccessible = true
                     d.stateFields.add(field)
+                }
+                field.getAnnotation(LiveParam::class.java)?.let { a ->
+                    field.isAccessible = true
+                    d.paramFields.add((a.value.ifEmpty { field.name }) to field)
                 }
             }
             return d

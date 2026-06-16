@@ -23,3 +23,12 @@ annotation class LiveState
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class LiveAction(val value: String = "")
+
+/**
+ * Binds a dynamic route segment to a field. For `@Route("/users/{id}")`, a field
+ * `@LiveParam var id: Int` receives the value from the URL when the screen mounts. The
+ * param name defaults to the field name; override with `@LiveParam("id")`.
+ */
+@Target(AnnotationTarget.FIELD)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class LiveParam(val value: String = "")

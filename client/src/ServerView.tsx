@@ -68,7 +68,15 @@ function render(node: UiNode | null, call: Call, slot: ReactNode, key?: string |
  * tree the server sends, applying patches as they arrive. `slot` is the child screen a
  * layout renders into. This is the only component your app screens need.
  */
-export default function ServerView({ name, slot }: { name: string; slot?: ReactNode }) {
-  const { tree, call } = useServerComponent(name)
+export default function ServerView({
+  name,
+  slot,
+  params,
+}: {
+  name: string
+  slot?: ReactNode
+  params?: Record<string, unknown>
+}) {
+  const { tree, call } = useServerComponent(name, params)
   return createElement(Fragment, null, render(tree, call, slot, 'root'))
 }

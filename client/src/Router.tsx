@@ -1,6 +1,6 @@
 import { createElement, useEffect, useState, type ReactNode } from 'react'
 import ServerView from './ServerView'
-import { resolveRoute, type Routes } from './routing'
+import { isInternalRoute, resolveRoute, type Routes } from './routing'
 
 function routes(): Routes {
   return (window as any).__ROUTES__ ?? {}
@@ -8,8 +8,8 @@ function routes(): Routes {
 
 /**
  * Client-side router. Intercepts internal link clicks and back/forward, swaps the screen
- * over the live WebSocket (no full reload), and persists a layout across navigation: the
- * layout component stays mounted while only the inner screen (keyed by view) remounts.
+ * over the live WebSocket (no full reload), passes dynamic route params to the screen,
+ * sets the document title, and persists a layout across navigation.
  */
 export default function Router() {
   const [path, setPath] = useState(() => location.pathname)
@@ -22,7 +22,7 @@ export default function Router() {
       const anchor = (e.target as HTMLElement)?.closest?.('a')
       const href = anchor?.getAttribute('href')
       if (!href || !href.startsWith('/') || anchor?.getAttribute('target')) return
-      if (!(href in routes())) return // let the browser handle non-app links
+      if (!isInternalRoute(href, routes())) return // let the browser handle non-app links
       e.preventDefault()
       if (href !== location.pathname) history.pushState({}, '', href)
       setPath(href)
@@ -38,10 +38,17 @@ export default function Router() {
   }, [])
 
   const route = resolveRoute(path, routes(), (window as any).__VIEW__)
-  const page: ReactNode = createElement(ServerView, { name: route.view, key: route.view })
-  return route.layout
-    ? createElement(ServerView, { name: route.layout, slot: page })
-    : page
+
+  useEffect(() => {
+    if (route.title) document.title = route.title
+  }, [route.title])
+
+  const page: ReactNode = createElement(ServerView, {
+    name: route.view,
+    params: route.params,
+    key: route.view + ':' + JSON.stringify(route.params),
+  })
+  return route.layout ? createElement(ServerView, { name: route.layout, slot: page }) : page
 }
 
 /** Programmatic navigation (also exposed as window.SpringReact.navigate). */
