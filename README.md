@@ -1,141 +1,143 @@
+<div align="center">
+
 # SpringReact
 
-**Build interactive websites by writing one language — Kotlin — with no separate
-"frontend" to learn.**
+**Build live, interactive web UIs in pure Kotlin — no separate frontend, no JavaScript, no REST glue.**
 
-> 🟢 **New to programming?** This page now starts gentle. SpringReact is a tool for people
-> who know a *little* **Kotlin or Java**. If you've never coded, that's okay — learn some
-> basic Kotlin first, then come back. (Looking for the precise technical pitch? It's in
-> [For experienced developers](#for-experienced-developers) lower down.)
+[![CI](https://github.com/VexoraWebServices/springReact/actions/workflows/ci.yml/badge.svg)](https://github.com/VexoraWebServices/springReact/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?logo=kotlin&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F?logo=springboot&logoColor=white)
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-## What it does, in plain words
+[Quick start](#quick-start) · [Documentation](#documentation) · [Examples](#examples) · [How it works](docs/12-how-it-works.md)
 
-To make a modern website you normally write **two** programs and glue them together:
+</div>
 
-- a **backend** — runs on the *server* (an always-on computer that holds your data), and
-- a **frontend** — runs in each visitor's *web browser*; the buttons and screens they see.
+---
 
-That's a lot to learn. **SpringReact removes the second one.** You write your screens once,
-in Kotlin, on the server. SpringReact shows them in the browser and keeps them **live**:
-when someone clicks, your Kotlin code runs and the screen updates by itself — no separate
-frontend project, no JavaScript needed.
+SpringReact is a **Spring Boot framework** that lets you write your entire web UI as **Kotlin
+server components**. You describe a screen in Kotlin; the framework renders it, serves it, and
+keeps it **live over a single WebSocket** — when a user interacts, your Kotlin code runs and
+only the changed parts of the page update. It bundles its own React runtime inside the jar, so
+there is **no separate frontend project and nothing to install on the client**.
 
-> 🍽️ **Analogy:** normally the kitchen (backend) and the waiters (frontend) coordinate with
-> written tickets (glue code). SpringReact is like the kitchen controlling each diner's
-> plate directly — you just cook (write Kotlin) and what people see updates itself.
+> 🟢 **New to programming?** Here's the idea in plain words: a modern website is usually *two*
+> programs — a **backend** (on the server, holds your data) and a **frontend** (in the
+> browser, the buttons people see) — plus glue to connect them. SpringReact removes the
+> second one: you write everything once in Kotlin and it shows up, live, in the browser.
+> It does assume you know a *little* Kotlin or Java — if you're brand new, start with
+> [Getting Started](docs/01-getting-started.md).
 
-## Your first screen (a click counter)
+## Table of Contents
+
+- [Why SpringReact](#why-springreact)
+- [Quick start](#quick-start)
+- [How a screen looks](#how-a-screen-looks)
+- [Features](#features)
+- [Documentation](#documentation)
+- [Examples](#examples)
+- [Tailwind & npm modules](#tailwind--npm-modules)
+- [Configuration](#configuration)
+- [Project structure](#project-structure)
+- [Building from source](#building-from-source)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Why SpringReact
+
+| | Classic SPA + REST | Thymeleaf / server templates | **SpringReact** |
+|---|---|---|---|
+| Languages | Kotlin **+** JS/TS | Kotlin + HTML templates | **Kotlin only** |
+| Frontend project | Separate (npm, bundler) | None | **None** (runtime bundled in the jar) |
+| Client ↔ server | Hand-written REST API | Full page reloads | **Automatic, over one WebSocket** |
+| Live updates | DIY (state, fetch, sockets) | ✗ | **Built-in** (only changed DOM updates) |
+| SEO / first paint | CSR (often empty source) | ✓ | **✓ server-side rendered** |
+
+You get React's interactivity with the simplicity of server-side development — one language,
+one process, one deployable jar.
+
+## Quick start
+
+Add the Gradle plugin — it configures Kotlin, Spring Boot, dependency management, and the
+framework:
 
 ```kotlin
-@LiveComponent("Home")          // 1. a screen we'll call "Home"
-@Route("/")                     // 2. show it at the homepage address, "/"
+// build.gradle.kts
+plugins {
+    id("com.vexora.springreact") version "0.1.0"
+}
+```
+
+Or scaffold a new project from scratch:
+
+```bash
+./tools/create-springreact.sh my-app com.acme.myapp
+cd my-app && ./gradlew bootRun        # → http://localhost:8080
+```
+
+See [The Gradle Plugin](docs/17-gradle-plugin.md) and [Getting Started](docs/01-getting-started.md).
+
+## How a screen looks
+
+```kotlin
+@LiveComponent("Home")          // a screen named "Home"
+@Route("/")                     // served at the homepage "/"
 class HomeScreen : ServerComponent {
 
-    @LiveState var count = 0     // 3. a number we remember; starts at 0
+    @LiveState var count = 0                 // state lives on the server
 
-    @LiveAction fun click() {    // 4. something the user can do…
-        count = count + 1        //    …here, add 1 to count
-    }
+    @LiveAction fun click() { count++ }      // an action the user can trigger
 
-    override fun render(): UiNode =          // 5. what the screen looks like:
+    override fun render(): UiNode =          // what the screen looks like
         div(
-            h1("You clicked $count times"),  //    a heading showing the number
-            button(onClick("click"), "Click me"),  // a button that calls click()
+            h1("You clicked $count times"),
+            button(onClick("click"), "Click me"),
         )
 }
 ```
 
-**What you'd see:** open the site → "You clicked **0** times" and a button. Every click runs
-`click()` on the server, `count` goes up, and the heading updates automatically.
-
-Reading it line by line:
-
-1. `@LiveComponent("Home")` — "this class is a screen named Home."
-2. `@Route("/")` — "show this screen at the website's homepage."
-3. `@LiveState var count = 0` — a value the screen remembers (its *state*). `var` means it
-   can change; it starts at `0`.
-4. `@LiveAction fun click() { ... }` — an action the browser can trigger (here, when the
-   button is clicked). It changes `count`.
-5. `render()` — describes what to show. `div`, `h1`, `button` are just HTML pieces written
-   as Kotlin; `$count` drops the current number into the text.
-
-That's the whole idea: **remember some state, define actions, and describe the screen.**
-SpringReact handles the rest.
-
-## Try it (5 minutes)
-
-Follow **[Getting Started](docs/01-getting-started.md)** — it walks you through running your
-very first screen step by step. Or run the ready-made example:
-
-```bash
-cd examples/todo && gradle bootRun   # then open http://localhost:8080
-```
-
----
-
-## For experienced developers
-
-A **Kotlin Spring Boot framework** for building React UIs without leaving the JVM. You
-write screens as **Kotlin server components**; the framework renders them to a React
-element tree, streams it (and incremental patches) to a runtime it **bundles inside its own
-jar**, and reconciles it with real React over **one WebSocket**. Like Thymeleaf: add the
-dependency, write components, run. **No separate frontend project, no npm, no REST glue.**
-
-### Quick start (Gradle plugin)
-
-```kotlin
-plugins { id("com.vexora.springreact") version "0.1.0" }
-```
-
-That one line configures Kotlin, Spring Boot, dependency management, and the framework. See
-[the Gradle plugin docs](docs/17-gradle-plugin.md) and [`examples/minimal`](examples/minimal).
+Open the page → "You clicked **0** times". Each click runs `click()` on the server, `count`
+goes up, and the heading updates instantly — no API to write, no client state to manage.
+New to this? Every line is explained in [Getting Started](docs/01-getting-started.md).
 
 ## Features
 
-- **Server components** — `@LiveComponent` + `ServerComponent.render()` in Kotlin, with
-  full Spring DI. State lives in the JVM (`@LiveState`); events are `@LiveAction`s.
-- **One WebSocket transport** — no REST, no client store. Full tree on mount, minimal
-  **diff patches** after that.
-- **Routing & client navigation** — `@Route("/path", layout="Main", title="…")` declares a
-  screen's URL (no controller needed), including **dynamic params** (`/users/{id}` →
-  `@LiveParam`) and per-route titles. The bundled runtime does client-side navigation (no
-  full reload) via the injected `window.__ROUTES__` table.
-- **Layouts (incl. nested)** — `Html.slot()`; layouts stay mounted while the inner screen
-  swaps. `@Layout(parent="…")` nests layouts (root → section → page).
-- **Realtime broadcast** — inject `LiveBroadcaster`; `broadcast("Component")` re-renders
-  every mounted client (live dashboards, presence, chat).
-- **Forms + validation** — `onSubmit` binds named fields to a typed Kotlin DTO; a
-  `LiveErrors` parameter is filled from Bean Validation before your action runs.
-- **Keyed reconciliation** — `key()` on list children → minimal `keyed` patches on
-  reorder/insert/remove (no index churn).
-- **Custom widgets** — `widget("Name", attr(...))` renders a registered client React
-  component (charts, canvas, animations) while logic stays on the server.
-- **Authorization** — `@LiveAuthorize("ADMIN")` guards actions; a pluggable `LiveSecurity`
-  bean decides (bridge it to Spring Security).
-- **Async, loading & redirects** — `LiveContext.current()` gives an action a `handle()` to
-  push a re-render after background work (loading states) and `redirect("/path")` for
-  server-initiated navigation.
-- **Not-found & error boundaries** — `spring.react.not-found-view` (404) and
-  `spring.react.error-view` (render failures) render your own components.
-- **Middleware** — `LiveInterceptor` beans run before every action (logging, tenancy, rate
-  limiting, blocking).
-- **Lifecycle hooks** — `LiveLifecycle.onMount/onUnmount` (reliable on disconnect) for
-  presence, subscriptions, cleanup; plus `LiveContext` access to headers/cookies/principal.
-- **i18n** — `LiveContext.locale()` (from Accept-Language) + Spring `MessageSource` render
-  screens in the user's language.
-- **Server-side rendering** — the initial screen + layouts are pre-rendered to HTML on
-  the JVM (no Node), so View Source / crawlers / first paint show real content; the client
-  seeds from it and takes over. Toggle with `spring.react.ssr`.
-- **Styling & npm modules** — point `spring.react.stylesheets` at your CSS (Tailwind,
-  etc.) and `spring.react.scripts` at a custom-widget bundle; the runtime exposes its
-  React (`window.SpringReact.React`) so widget bundles (three.js, charts) share one React.
-- **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
-  `/springreact/springreact.js`. Consumers ship no frontend files.
+- **Server components** — `@LiveComponent` + `render()` in Kotlin, with full Spring DI. State
+  lives in the JVM (`@LiveState`); events are `@LiveAction`s.
+- **One WebSocket transport** — no REST, no client store. Full tree on mount, minimal **diff
+  patches** after that.
+- **Routing & client navigation** — `@Route("/path", layout, title)`; **dynamic params**
+  (`/users/{id}` → `@LiveParam`), per-route titles, client-side nav (no full reload).
+- **Layouts (incl. nested)** — `Html.slot()`; `@Layout(parent="…")` nests layouts; they stay
+  mounted while the inner screen swaps.
+- **Realtime broadcast** — `LiveBroadcaster.broadcast("Component")` re-renders every connected
+  client (live dashboards, presence, chat).
+- **Forms + validation** — `onSubmit` binds named fields to a typed Kotlin DTO, validated with
+  Bean Validation before your action runs.
+- **Keyed reconciliation** — `key()` on list children → minimal patches on reorder/insert/remove.
+- **Custom widgets** — drop real React components (charts, three.js, maps) into a screen with
+  `widget("Name", …)`; logic stays on the server.
+- **Authorization** — `@LiveAuthorize("ROLE")` + a pluggable `LiveSecurity` bean (bridge to
+  Spring Security).
+- **Async, loading & redirects** — `LiveContext` gives an action a `handle()` to push updates
+  after background work, plus `redirect("/path")`.
+- **404 & error boundaries** — render your own components for unknown URLs and render failures.
+- **Middleware** — `LiveInterceptor` beans run before every action (logging, tenancy, rate limits).
+- **Lifecycle & context** — `onMount`/`onUnmount` (reliable on disconnect) and access to
+  headers/cookies/principal/locale.
+- **i18n** — locale from `Accept-Language` + Spring `MessageSource`.
+- **Server-side rendering** — initial screen + layouts pre-rendered to HTML on the JVM (no
+  Node) for SEO and fast first paint.
+- **Bundled runtime** — the React runtime is esbuild-bundled into the jar; consumers ship no
+  frontend files.
 
 ## Documentation
 
-Beginner-friendly guides with copy-paste examples — one page per feature. New here? Read
-them in order; or jump to what you need.
+One page per feature, beginner-friendly with copy-paste examples. New here? Read in order; or
+jump to what you need.
 
 **Basics**
 1. [Getting Started](docs/01-getting-started.md) — your first screen in 5 minutes
@@ -172,112 +174,113 @@ them in order; or jump to what you need.
 | Example | What it shows |
 |---|---|
 | [`examples/minimal`](examples/minimal) | The smallest app — one screen via the Gradle plugin |
-| [`examples/todo`](examples/todo) | Full showcase: validated form, keyed list, quantity steppers, duplicate-name toast, filters, live badge, **Tailwind-style CSS** and a **three.js custom widget** |
+| [`examples/todo`](examples/todo) | Full showcase: validated form, keyed list, quantity steppers, duplicate-name toast, filters, live badge, custom CSS, and a **three.js custom widget** |
 
 ```bash
+./gradlew publishToMavenLocal        # make the framework available locally
 cd examples/todo && gradle bootRun   # → http://localhost:8080
 ```
 
-## Using Tailwind & npm modules (short version)
+## Tailwind & npm modules
 
-You write screens in Kotlin, so there's **no frontend project by default**. When you want
-the npm ecosystem, there are two simple paths — full guide in
-**[npm Modules & Tailwind](docs/20-npm-modules-and-tailwind.md)**.
+You write screens in Kotlin, so there is **no frontend project by default**. When you want the
+npm ecosystem there are two simple paths — full guide:
+[**npm Modules & Tailwind**](docs/20-npm-modules-and-tailwind.md).
 
-**CSS / Tailwind** — Tailwind emits a stylesheet; your class names live in Kotlin
-`cls("…")` strings, so point Tailwind at your `.kt` files and load the output:
+**CSS / Tailwind** — Tailwind emits a stylesheet; your class names live in Kotlin `cls("…")`
+strings, so point Tailwind at your `.kt` files and load the output:
 
 ```js
-// tailwind.config.js
+// tailwind.config.js — scan your Kotlin screens for class names
 content: ['../src/main/kotlin/**/*.kt']
 ```
-```bash
-npx tailwindcss -i input.css -o src/main/resources/static/app.css --minify
-```
 ```properties
-spring.react.stylesheets=/app.css
-```
-```kotlin
-div(cls("max-w-md mx-auto rounded-xl bg-slate-800 p-6"), h1(cls("text-2xl"), "Hi"))
+spring.react.stylesheets=/app.css     # built by `npx tailwindcss -o .../static/app.css`
 ```
 
-**JS libraries (three.js, chart.js, …)** — a client-side lib goes in a small **widget
-bundle**. The runtime exposes its React on `window.SpringReact.React`, so your bundle shares
-it (alias `react` → a shim) instead of bundling a second copy:
+**JS libraries (three.js, chart.js, …)** — a client-side lib goes in a small **widget bundle**.
+The runtime exposes its React on `window.SpringReact.React`, so your bundle shares it instead
+of shipping a second copy:
 
 ```tsx
-import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 function Cube() { /* … */ }
 window.SpringReact.registerWidget('Cube', Cube)
 ```
-```bash
-esbuild src/widgets.tsx --bundle --alias:react=./react-shim.js --outfile=static/widgets.js
-```
 ```properties
-spring.react.scripts=/widgets.js
+spring.react.scripts=/widgets.js      # built with esbuild --alias:react=./react-shim.js
 ```
 ```kotlin
-widget("Cube", attr("color", "#9b6dff"), attr("size", 180))   // in any screen
+widget("Cube", attr("color", "#9b6dff"), attr("size", 180))   // use it from Kotlin
 ```
 
-Trade-off: pure-Kotlin UI needs **zero npm**; the moment you use a JS library you need a
-small bundle step *for that widget only* (you can't run JS libs without JS tooling). The
-[`examples/todo`](examples/todo) About page renders a real three.js cube exactly this way.
+> Trade-off: pure-Kotlin UI needs **zero npm**; the moment you use a JS library you need a
+> small bundle step *for that widget only*. The [`examples/todo`](examples/todo) About page
+> renders a real three.js cube exactly this way.
 
-## Module layout
+## Configuration
+
+All settings live under `spring.react.*` in `application.properties` / `.yml`. Everything has a
+sensible default — zero config required.
+
+| Property | Default | Meaning |
+|---|---|---|
+| `spring.react.title` | `SpringReact` | default `<title>` |
+| `spring.react.ssr` | `true` | pre-render the initial screen into the HTML |
+| `spring.react.stylesheets` | *(empty)* | CSS URLs added as `<link>` to the shell |
+| `spring.react.scripts` | *(empty)* | JS URLs (widget bundles) loaded after the runtime |
+| `spring.react.not-found-view` | *(empty)* | component to render for 404s |
+| `spring.react.error-view` | *(empty)* | component to render when `render()` throws |
+| `spring.react.allowed-origins` | `*` | `/live` WebSocket origin allowlist |
+| `spring.react.runtime-path` | `/springreact/springreact.js` | URL of the bundled runtime |
+
+## Project structure
 
 ```
 SpringReact/                       (Kotlin, build.gradle.kts)
 ├── src/main/kotlin/com/vexora/springreact/
 │   ├── jsc/        Html DSL, UiNode/Element/Text/Attr, ServerComponent, UiTreeDiff, UiHtml (SSR)
-│   ├── live/       @LiveComponent/@LiveState/@LiveAction, registry, WebSocket handler,
-│   │               LiveBroadcaster, LiveErrors, LiveContext, LiveInterceptor, auto-config
+│   ├── live/       @LiveComponent/@LiveState/@LiveAction, WebSocket handler, LiveBroadcaster,
+│   │               LiveContext, LiveInterceptor, LiveSecurity, auto-config
 │   ├── web/        @Route/@Layout + RouteRegistry, ReactView/ReactViewResolver
 │   └── autoconfigure/  ReactProperties, ReactRenderer (shell + SSR), ReactAutoConfiguration
-├── src/test/kotlin/com/vexora/springreact/it/   integration tests — drive the real /live socket
-├── gradle-plugin/  the `com.vexora.springreact` Gradle plugin (one-line setup)
-└── client/         the bundled runtime (esbuild): ServerView, Router, hooks, patch
-                    application, widget registry  (+ vitest unit tests)
+├── src/test/kotlin/  integration tests — drive the real /live WebSocket
+├── gradle-plugin/    the `com.vexora.springreact` Gradle plugin (one-line setup)
+├── client/           bundled runtime (esbuild): ServerView, Router, hooks, patch apply, widgets
+├── examples/         minimal + todo apps
+└── docs/             one guide per feature
 ```
 
-## Build & test — one command
+## Building from source
+
+**Requirements:** JDK 21, Node 22+. One command builds everything and runs both test suites:
 
 ```bash
 ./gradlew build
 ```
 
-Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
+- **26 Spring integration tests** drive the real `/live` WebSocket (DI, routing, forms,
+  broadcast, keyed diffing, auth, SSR, …).
+- **24 client tests** (vitest + jsdom) cover patch application, routing, and full
+  `ServerView`/`Router` rendering — plus a TypeScript typecheck.
 
-- **26 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
-  widgets, diffing), shell + routing, dynamic params, broadcast, forms, keyed reconciliation,
-  authorization, async/redirect, 404, middleware, nested layouts, error boundaries, i18n,
-  lifecycle, SSR, and custom assets.
-- **24 client tests** (vitest, incl. jsdom browser-path tests) — patch application, routing,
-  keyed ops, and full `ServerView`/`Router` rendering — plus a TypeScript typecheck.
-
-`npm install` and the client tests run automatically as Gradle tasks; no manual steps.
-
-## Configuration (`spring.react.*`)
-
-| Property                       | Default                       | Meaning                                  |
-|--------------------------------|-------------------------------|------------------------------------------|
-| `spring.react.title`           | `SpringReact`                 | default `<title>`                        |
-| `spring.react.runtime-path`    | `/springreact/springreact.js` | URL of the bundled runtime               |
-| `spring.react.allowed-origins` | `*`                           | `/live` WebSocket origin allowlist       |
-| `spring.react.not-found-view`  | *(empty)*                     | component to render for 404s             |
-| `spring.react.error-view`      | *(empty)*                     | component to render when render() throws |
-| `spring.react.ssr`             | `true`                        | pre-render the initial screen into the HTML |
-| `spring.react.stylesheets`     | *(empty)*                     | CSS URLs added as `<link>` to the shell  |
-| `spring.react.scripts`         | *(empty)*                     | JS URLs (widget bundles) loaded after the runtime |
-
-## Versions
-
-Kotlin 2.1.0 · Spring Boot 3.4.1 · Java 21 toolchain · Gradle Kotlin DSL ·
-node-gradle 7.1.0 (system Node) · React 18 (bundled).
+The client runtime is esbuild-bundled into the jar automatically; there are no manual npm
+steps. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Roadmap
 
-Shipped: server-side rendering (JVM-native, no Node),
-Gradle plugin, project initializer (tools/create-springreact.sh), and Maven Central
-publish wiring (signing + sources/javadoc jars, gated on credentials).
+- ✅ Server-side rendering (JVM-native, no Node)
+- ✅ Gradle plugin + project initializer
+- ✅ Custom widgets sharing the framework's React (three.js, charts)
+- ✅ Maven Central publish wiring (signing + sources/javadoc, gated on credentials)
+- ⬜ Publish to Maven Central & the Gradle Plugin Portal
+- ⬜ Streaming SSR for fully server-rendered widgets
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). In short: `./gradlew build`
+must be green, framework code is Kotlin-only, and every feature ships with a doc page.
+
+## License
+
+[Apache License 2.0](LICENSE).
