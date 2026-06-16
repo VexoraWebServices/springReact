@@ -1,21 +1,18 @@
 import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
-import ServerView from './ServerView'
+import Router, { navigate } from './Router'
 import { registerWidget } from './widgets'
 
-// This file is bundled (with React) into a single script that the plugin embeds in its
-// jar and serves automatically. The page needs nothing else: it reads window.__VIEW__
-// and mounts the matching Java/Kotlin Server Component. Like Thymeleaf, the consumer
-// ships no frontend — they just write server components.
+// Bundled (with React) into a single script the framework embeds in its jar and serves
+// automatically. The page needs nothing else: this reads window.__VIEW__ / __ROUTES__
+// and mounts the matching server component, with client-side navigation between routes.
 
-// Optional API for custom widgets, exposed globally for advanced users.
-;(window as any).SpringReact = { registerWidget }
+;(window as any).SpringReact = { registerWidget, navigate }
 
 function mount() {
   const el = document.getElementById('root')
   if (!el) return
-  const view = (window as any).__VIEW__ as string
-  createRoot(el).render(createElement(ServerView, { name: view }))
+  createRoot(el).render(createElement(Router))
 }
 
 if (document.readyState === 'loading') {

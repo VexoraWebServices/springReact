@@ -1,5 +1,8 @@
 export { default as ServerView } from './ServerView'
+export { default as Router, navigate } from './Router'
 export { useServerComponent, useLive, applyOps } from './live'
 export type { UiNode, Op, Call, LiveMessage } from './live'
+export { resolveRoute, isInternalRoute } from './routing'
+export type { RouteInfo, Routes } from './routing'
 export { registerWidget, widgetRegistry } from './widgets'
 export type { WidgetProps } from './widgets'

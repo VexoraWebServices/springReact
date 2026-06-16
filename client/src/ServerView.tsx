@@ -2,12 +2,14 @@ import { createElement, Fragment, type ReactNode } from 'react'
 import { useServerComponent, type Call, type UiNode } from './live'
 import { widgetRegistry } from './widgets'
 
-// Turn a server-sent UI node into real React elements. Event props like
-// { onClick: { $action, args, event } } become handlers that call the server.
-// A node with tag "$widget" renders a registered custom React component.
-function render(node: UiNode | null, call: Call, key?: string | number): ReactNode {
+// Turn a server-sent UI node into real React elements.
+// - event props { onClick: { $action, args, event } } become handlers that call the server
+// - tag "$widget" renders a registered custom React component
+// - tag "$slot" renders the child screen a layout wraps
+function render(node: UiNode | null, call: Call, slot: ReactNode, key?: string | number): ReactNode {
   if (node == null) return null
   if ('text' in node) return node.text
+  if (node.tag === '$slot') return slot ?? null
 
   const rawProps = node.props ?? {}
 
@@ -15,7 +17,7 @@ function render(node: UiNode | null, call: Call, key?: string | number): ReactNo
     const { name, ...rest } = rawProps
     const Widget = widgetRegistry[name]
     if (!Widget) return createElement('span', { key }, `[unknown widget: ${name}]`)
-    const kids = (node.children ?? []).map((c, i) => render(c, call, i))
+    const kids = (node.children ?? []).map((c, i) => render(c, call, slot, i))
     return createElement(Widget, { key, ...rest, call }, ...kids)
   }
 
@@ -24,6 +26,7 @@ function render(node: UiNode | null, call: Call, key?: string | number): ReactNo
     if (name.startsWith('on') && value && typeof value === 'object' && '$action' in value) {
       const binding = value as { $action: string; args?: unknown[]; event?: string }
       props[name] = (e: any) => {
+        if (name === 'onSubmit') e?.preventDefault?.()
         const args: unknown[] = []
         if (binding.event) args.push(e?.target?.[binding.event])
         if (binding.args) args.push(...binding.args)
@@ -34,16 +37,16 @@ function render(node: UiNode | null, call: Call, key?: string | number): ReactNo
     }
   }
 
-  const children = (node.children ?? []).map((child, i) => render(child, call, i))
+  const children = (node.children ?? []).map((child, i) => render(child, call, slot, i))
   return createElement(node.tag, props, ...children)
 }
 
 /**
- * The universal client runtime: mounts a Java Server Component by name and renders
- * whatever tree the server sends, applying patches as they arrive. This is the only
- * component your app screens need — the screens themselves live in Java/Kotlin.
+ * The universal client runtime: mounts a server component by name and renders whatever
+ * tree the server sends, applying patches as they arrive. `slot` is the child screen a
+ * layout renders into. This is the only component your app screens need.
  */
-export default function ServerView({ name }: { name: string }) {
+export default function ServerView({ name, slot }: { name: string; slot?: ReactNode }) {
   const { tree, call } = useServerComponent(name)
-  return createElement(Fragment, null, render(tree, call, 'root'))
+  return createElement(Fragment, null, render(tree, call, slot, 'root'))
 }
