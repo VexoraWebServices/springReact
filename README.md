@@ -65,6 +65,10 @@ That one line configures Kotlin, Spring Boot, dependency management, and the fra
   presence, subscriptions, cleanup; plus `LiveContext` access to headers/cookies/principal.
 - **i18n** — `LiveContext.locale()` (from Accept-Language) + Spring `MessageSource` render
   screens in the user's language.
+- **Server-side rendering** — the initial screen + layouts are pre-rendered to HTML on
+  the JVM (no Node), so View Source / crawlers / first paint show real content; the client
+  seeds from it and takes over. Toggle with `spring.react.ssr`.
+- **Styling** — point `spring.react.stylesheets` at your CSS (served from `static/`).
 - **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
   `/springreact/springreact.js`. Consumers ship no frontend files.
 
@@ -123,6 +127,8 @@ Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** sui
 | `spring.react.allowed-origins` | `*`                           | `/live` WebSocket origin allowlist       |
 | `spring.react.not-found-view`  | *(empty)*                     | component to render for 404s             |
 | `spring.react.error-view`      | *(empty)*                     | component to render when render() throws |
+| `spring.react.ssr`             | `true`                        | pre-render the initial screen into the HTML |
+| `spring.react.stylesheets`     | *(empty)*                     | CSS URLs added as `<link>` to the shell  |
 
 ## Versions
 
@@ -131,6 +137,6 @@ node-gradle 7.1.0 (system Node) · React 18 (bundled).
 
 ## Roadmap
 
-Toward full Next.js parity: streaming SSR (the one hard remaining piece). Shipped:
+Shipped: server-side rendering (JVM-native, no Node),
 Gradle plugin, project initializer (tools/create-springreact.sh), and Maven Central
 publish wiring (signing + sources/javadoc jars, gated on credentials).
