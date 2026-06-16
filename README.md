@@ -33,8 +33,8 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
   screen's URL (no controller needed), including **dynamic params** (`/users/{id}` →
   `@LiveParam`) and per-route titles. The bundled runtime does client-side navigation (no
   full reload) via the injected `window.__ROUTES__` table.
-- **Layouts** — `Html.slot()`; a layout component stays mounted while the inner screen
-  (keyed by view) swaps on navigation.
+- **Layouts (incl. nested)** — `Html.slot()`; layouts stay mounted while the inner screen
+  swaps. `@Layout(parent="…")` nests layouts (root → section → page).
 - **Realtime broadcast** — inject `LiveBroadcaster`; `broadcast("Component")` re-renders
   every mounted client (live dashboards, presence, chat).
 - **Forms + validation** — `onSubmit` binds named fields to a typed Kotlin DTO; a
@@ -86,10 +86,10 @@ SpringReact/                       (Kotlin, build.gradle.kts)
 
 Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- **15 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+- **16 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
   widgets, diffing), shell + routing, dynamic route params, broadcast (two clients), form
-  validation, keyed reconciliation, authorization, async/redirect, 404 pages, and middleware.
-- **14 client unit tests** (vitest) — patch application, route resolution + matching, keyed
+  validation, keyed reconciliation, authorization, async/redirect, 404 pages, middleware, and nested layouts.
+- **18 client unit tests** (vitest) — patch application, route resolution + matching, keyed
   ops — plus a TypeScript typecheck.
 
 `npm install` and the client tests run automatically as Gradle tasks; no manual steps.
@@ -110,5 +110,5 @@ node-gradle 7.1.0 (system Node) · React 18 (bundled).
 
 ## Roadmap
 
-Toward full Next.js parity: nested layouts · streaming SSR · a project
+Toward full Next.js parity: streaming SSR · a project
 starter/initializer · publishing to Maven Central (POM metadata is in place).

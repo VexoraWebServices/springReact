@@ -53,6 +53,7 @@ class ReactRenderer(
         val viewJson = writeJson(viewName)
         val modelJson = writeJson(sanitize(model))
         val routesJson = writeJson(routes.toJson())
+        val layoutsJson = writeJson(routes.layoutsToJson())
         val notFoundJson = writeJson(properties.notFoundView.ifEmpty { null })
         return """
             <!doctype html>
@@ -65,6 +66,7 @@ class ReactRenderer(
                 window.__VIEW__ = $viewJson;
                 window.__MODEL__ = $modelJson;
                 window.__ROUTES__ = $routesJson;
+                window.__LAYOUTS__ = $layoutsJson;
                 window.__NOTFOUND__ = $notFoundJson;
               </script>
             </head>

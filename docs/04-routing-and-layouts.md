@@ -103,6 +103,32 @@ renders   <ServerView name="Main" slot={ <ServerView name="Home"/> } />
             └ layout stays mounted        └ inner screen, keyed by view → remounts on nav
 ```
 
+## Nested layouts
+
+A layout can live inside another layout. Mark a layout with `@Layout(parent = "...")`:
+
+```kotlin
+@LiveComponent("Root")
+class RootLayout : ServerComponent {
+    override fun render(): UiNode =
+        div(cls("app"), header("My App"), main(slot()))
+}
+
+@LiveComponent("Admin")
+@Layout(parent = "Root")                 // Admin is nested inside Root
+class AdminLayout : ServerComponent {
+    override fun render(): UiNode =
+        div(cls("admin"), aside("Admin menu"), section(slot()))
+}
+
+@LiveComponent("Users")
+@Route("/admin/users", layout = "Admin") // page → Admin → Root
+class UsersScreen : ServerComponent { ... }
+```
+
+`/admin/users` renders as `Root( Admin( UsersScreen ) )`. Navigating between two `Admin`
+pages keeps **both** Root and Admin mounted; only the page swaps. Chains can be any depth.
+
 ## Not-found (404) page
 
 Make a component and point `spring.react.not-found-view` at it:

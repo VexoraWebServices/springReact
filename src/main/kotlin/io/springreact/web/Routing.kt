@@ -20,6 +20,21 @@ import org.springframework.context.ApplicationContext
 annotation class Route(val value: String, val layout: String = "", val title: String = "")
 
 /**
+ * Marks a `@LiveComponent` as a layout and (optionally) nests it inside a parent layout —
+ * enabling nested layouts (root → section → page). The page references the innermost
+ * layout via `@Route(layout = "...")`; that layout's `@Layout(parent = "...")` chains up.
+ *
+ * ```
+ * @LiveComponent("Root")                       class RootLayout    // top
+ * @LiveComponent("Admin") @Layout(parent="Root") class AdminLayout // nested in Root
+ * @LiveComponent("Users") @Route("/admin/users", layout="Admin") class UsersScreen
+ * ```
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Layout(val parent: String = "")
+
+/**
  * Discovers all `@Route` components at startup and exposes the path → (view, layout) map,
  * both to the server (to serve shells) and to the client (injected as `window.__ROUTES__`
  * for client-side navigation).
@@ -29,6 +44,7 @@ class RouteRegistry(context: ApplicationContext) {
     data class RouteInfo(val view: String, val layout: String?, val title: String?)
 
     private val routes = LinkedHashMap<String, RouteInfo>()
+    private val layouts = LinkedHashMap<String, String>() // layout name -> parent layout name
 
     init {
         for (beanName in context.getBeanNamesForAnnotation(Route::class.java)) {
@@ -36,9 +52,17 @@ class RouteRegistry(context: ApplicationContext) {
             val view = context.findAnnotationOnBean(beanName, LiveComponent::class.java)?.value ?: continue
             routes[route.value] = RouteInfo(view, route.layout.ifEmpty { null }, route.title.ifEmpty { null })
         }
+        for (beanName in context.getBeanNamesForAnnotation(Layout::class.java)) {
+            val layout = context.findAnnotationOnBean(beanName, Layout::class.java) ?: continue
+            val name = context.findAnnotationOnBean(beanName, LiveComponent::class.java)?.value ?: continue
+            if (layout.parent.isNotEmpty()) layouts[name] = layout.parent
+        }
     }
 
     fun all(): Map<String, RouteInfo> = routes
+
+    /** layout name → parent layout name (for nested layouts). */
+    fun layoutsToJson(): Map<String, String> = layouts
 
     fun toJson(): Map<String, Any?> {
         val json = LinkedHashMap<String, Any?>()

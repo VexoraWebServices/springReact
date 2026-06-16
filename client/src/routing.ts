@@ -37,3 +37,21 @@ export function resolveRoute(path: string, routes: Routes, fallbackView: string)
 export function isInternalRoute(path: string, routes: Routes): boolean {
   return Object.keys(routes).some((pattern) => matchPath(pattern, path) !== null)
 }
+
+export type Layouts = Record<string, string> // layout name -> parent layout name
+
+/**
+ * The layout chain from innermost to outermost, e.g. layout "Admin" whose parent is "Root"
+ * → ["Admin", "Root"]. Page is wrapped Admin(slot=Page), then Root(slot=Admin(...)).
+ */
+export function layoutChain(layout: string | undefined, layouts: Layouts): string[] {
+  const chain: string[] = []
+  const seen = new Set<string>()
+  let l = layout
+  while (l && !seen.has(l)) {
+    chain.push(l)
+    seen.add(l)
+    l = layouts[l]
+  }
+  return chain
+}

@@ -1,9 +1,13 @@
 import { createElement, useEffect, useState, type ReactNode } from 'react'
 import ServerView from './ServerView'
-import { isInternalRoute, resolveRoute, type Routes } from './routing'
+import { isInternalRoute, layoutChain, resolveRoute, type Layouts, type Routes } from './routing'
 
 function routes(): Routes {
   return (window as any).__ROUTES__ ?? {}
+}
+
+function layouts(): Layouts {
+  return (window as any).__LAYOUTS__ ?? {}
 }
 
 /**
@@ -43,12 +47,16 @@ export default function Router() {
     if (route.title) document.title = route.title
   }, [route.title])
 
-  const page: ReactNode = createElement(ServerView, {
+  let node: ReactNode = createElement(ServerView, {
     name: route.view,
     params: route.params,
     key: route.view + ':' + JSON.stringify(route.params),
   })
-  return route.layout ? createElement(ServerView, { name: route.layout, slot: page }) : page
+  // Wrap in each layout from innermost to outermost (nested layouts).
+  for (const name of layoutChain(route.layout, layouts())) {
+    node = createElement(ServerView, { name, slot: node })
+  }
+  return node
 }
 
 /** Programmatic navigation (also exposed as window.SpringReact.navigate). */
