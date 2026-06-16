@@ -17,6 +17,7 @@ examples you can run.
 12. [How It Works](12-how-it-works.md) — the architecture, end to end
 13. [Async, Loading & Redirects](13-async-and-redirects.md) — slow work and server-side navigation
 14. [Middleware](14-middleware.md) — run logic before every action
+15. [Lifecycle & Presence](15-lifecycle-and-presence.md) — onMount/onUnmount, who's-online
 
 ## The 30-second mental model
 

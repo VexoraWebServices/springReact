@@ -57,6 +57,7 @@ open class LiveWebSocketHandler(
     }
 
     override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+        instances(session).values.forEach { if (it is LiveLifecycle) runCatching { it.onUnmount() } }
         refs(session).values.forEach { mounts[it.component]?.remove(it) }
         session.attributes.remove(INSTANCES)
         session.attributes.remove(TREES)
@@ -78,6 +79,14 @@ open class LiveWebSocketHandler(
                     val ref = MountRef(session, id, component)
                     refs(session)[id] = ref
                     mounts.computeIfAbsent(component) { ConcurrentHashMap.newKeySet() }.add(ref)
+                    if (instance is LiveLifecycle) {
+                        LiveContext.bind(LiveContext(this, session, id))
+                        try {
+                            instance.onMount()
+                        } finally {
+                            LiveContext.clear()
+                        }
+                    }
                     renderInitial(session, id, instance)
                 }
                 "call" -> {
@@ -102,9 +111,10 @@ open class LiveWebSocketHandler(
                     }
                 }
                 "unmount" -> {
-                    instances.remove(id)
+                    val removed = instances.remove(id)
                     trees(session).remove(id)
                     refs(session).remove(id)?.let { mounts[it.component]?.remove(it) }
+                    if (removed is LiveLifecycle) runCatching { removed.onUnmount() }
                 }
                 else -> sendError(session, id, "Unknown message type: '$type'")
             }
