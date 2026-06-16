@@ -38,6 +38,12 @@ class ReactProperties {
      * e.g. `spring.react.not-found-view=NotFound`.
      */
     var notFoundView: String = ""
+
+    /**
+     * Component to render when a screen's `render()` throws. It may take a
+     * `@LiveParam var message: String`. Empty = a built-in default error UI.
+     */
+    var errorView: String = ""
 }
 
 /**

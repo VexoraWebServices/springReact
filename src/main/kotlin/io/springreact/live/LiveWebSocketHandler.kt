@@ -2,6 +2,7 @@ package io.springreact.live
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.springreact.jsc.Html
 import io.springreact.jsc.ServerComponent
 import io.springreact.jsc.UiNode
 import io.springreact.jsc.UiTreeDiff
@@ -39,6 +40,7 @@ open class LiveWebSocketHandler(
     private val validator: Validator? = null,
     private val security: LiveSecurity = LiveSecurity { _, roles -> roles.isEmpty() },
     private val interceptors: List<LiveInterceptor> = emptyList(),
+    private val errorView: String = "",
 ) : TextWebSocketHandler(), LiveBroadcaster {
 
     private val log = LoggerFactory.getLogger(LiveWebSocketHandler::class.java)
@@ -145,7 +147,7 @@ open class LiveWebSocketHandler(
 
     private fun renderInitial(session: WebSocketSession, id: String, instance: Any) {
         if (instance is ServerComponent) {
-            val tree = instance.render()
+            val tree = safeRender(instance)
             trees(session)[id] = tree
             send(session, mapOf("t" to "tree", "id" to id, "tree" to tree.toJson()))
         } else {
@@ -153,10 +155,36 @@ open class LiveWebSocketHandler(
         }
     }
 
+    /** Render a component, falling back to the error view if render() throws. */
+    private fun safeRender(component: ServerComponent): UiNode =
+        try {
+            component.render()
+        } catch (ex: Exception) {
+            log.warn("Component render failed: {}", ex.message)
+            renderErrorView(ex)
+        }
+
+    private fun renderErrorView(ex: Throwable): UiNode {
+        if (errorView.isNotEmpty() && registry.has(errorView)) {
+            try {
+                val instance = registry.create(errorView)
+                applyParams(instance, objectMapper.valueToTree(mapOf("message" to (ex.message ?: "error"))))
+                if (instance is ServerComponent) return instance.render()
+            } catch (e: Exception) {
+                log.warn("Error view '{}' itself failed: {}", errorView, e.message)
+            }
+        }
+        return Html.div(
+            Html.cls("springreact-error"),
+            Html.h2("Something went wrong"),
+            Html.p(ex.message ?: "error"),
+        )
+    }
+
     private fun renderUpdate(session: WebSocketSession, id: String, instance: Any) {
         if (instance is ServerComponent) {
             val previous = trees(session)[id]
-            val current = instance.render()
+            val current = safeRender(instance)
             trees(session)[id] = current
             if (previous == null) {
                 send(session, mapOf("t" to "tree", "id" to id, "tree" to current.toJson()))

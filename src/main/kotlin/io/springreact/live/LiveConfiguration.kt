@@ -65,12 +65,14 @@ class LiveAutoConfiguration {
         validators: ObjectProvider<Validator>,
         security: LiveSecurity,
         interceptors: ObjectProvider<LiveInterceptor>,
+        properties: ReactProperties,
     ) = LiveWebSocketHandler(
         registry,
         objectMapper,
         validators.ifAvailable,
         security,
         interceptors.orderedStream().toList(),
+        properties.errorView,
     )
 
     /** The handler is the broadcaster; expose it so services/components can inject it. */

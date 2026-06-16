@@ -48,8 +48,8 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
 - **Async, loading & redirects** — `LiveContext.current()` gives an action a `handle()` to
   push a re-render after background work (loading states) and `redirect("/path")` for
   server-initiated navigation.
-- **Not-found pages** — `spring.react.not-found-view` renders a component (with a 404) for
-  unknown URLs.
+- **Not-found & error boundaries** — `spring.react.not-found-view` (404) and
+  `spring.react.error-view` (render failures) render your own components.
 - **Middleware** — `LiveInterceptor` beans run before every action (logging, tenancy, rate
   limiting, blocking).
 - **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
@@ -93,9 +93,9 @@ SpringReact/                       (Kotlin, build.gradle.kts)
 
 Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- **16 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+- **18 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
   widgets, diffing), shell + routing, dynamic route params, broadcast (two clients), form
-  validation, keyed reconciliation, authorization, async/redirect, 404 pages, middleware, and nested layouts.
+  validation, keyed reconciliation, authorization, async/redirect, 404, middleware, nested layouts, and error boundaries.
 - **18 client unit tests** (vitest) — patch application, route resolution + matching, keyed
   ops — plus a TypeScript typecheck.
 
@@ -109,6 +109,7 @@ Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** sui
 | `spring.react.runtime-path`    | `/springreact/springreact.js` | URL of the bundled runtime               |
 | `spring.react.allowed-origins` | `*`                           | `/live` WebSocket origin allowlist       |
 | `spring.react.not-found-view`  | *(empty)*                     | component to render for 404s             |
+| `spring.react.error-view`      | *(empty)*                     | component to render when render() throws |
 
 ## Versions
 

@@ -57,6 +57,25 @@ fun save(form: TodoForm, errors: LiveErrors) {
 The client receives a navigate message and performs client-side navigation (same as
 clicking a link).
 
+## Error boundaries
+
+If a screen's `render()` throws, SpringReact shows a friendly error UI instead of crashing
+the connection. By default it's a small built-in message; point `spring.react.error-view`
+at your own component to customise it:
+
+```kotlin
+@LiveComponent("ErrorView")
+class ErrorScreen : ServerComponent {
+    @LiveParam var message: String = ""        // receives the failure message
+    override fun render(): UiNode =
+        div(cls("error"), h1("Something broke"), p(message), a(href("/"), "Go home"))
+}
+```
+
+```properties
+spring.react.error-view=ErrorView
+```
+
 ## When to use what
 
 | You want… | Use |
