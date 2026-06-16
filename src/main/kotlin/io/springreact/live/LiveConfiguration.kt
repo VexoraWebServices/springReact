@@ -46,13 +46,25 @@ class LiveAutoConfiguration {
     @ConditionalOnMissingBean
     fun liveComponentRegistry(context: ApplicationContext) = LiveComponentRegistry(context)
 
+    /**
+     * Default authorization: actions with no roles are allowed; actions that DO require
+     * roles need an authenticated principal. Override this bean to do real role checks
+     * (e.g. via Spring Security).
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun liveSecurity(): LiveSecurity = LiveSecurity { principal, roles ->
+        roles.isEmpty() || principal != null
+    }
+
     @Bean
     @ConditionalOnMissingBean
     fun liveWebSocketHandler(
         registry: LiveComponentRegistry,
         objectMapper: ObjectMapper,
         validators: ObjectProvider<Validator>,
-    ) = LiveWebSocketHandler(registry, objectMapper, validators.ifAvailable)
+        security: LiveSecurity,
+    ) = LiveWebSocketHandler(registry, objectMapper, validators.ifAvailable, security)
 
     /** The handler is the broadcaster; expose it so services/components can inject it. */
     @Bean

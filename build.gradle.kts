@@ -96,6 +96,27 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
+            pom {
+                name.set("SpringReact")
+                description.set("Kotlin-first Spring Boot framework for React server components over one WebSocket")
+                url.set("https://github.com/VexoraWebServices/springReact")
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("kumaraguru1735")
+                        name.set("Kumaraguru")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/VexoraWebServices/springReact")
+                    connection.set("scm:git:https://github.com/VexoraWebServices/springReact.git")
+                }
+            }
         }
     }
 }

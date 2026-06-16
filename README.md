@@ -42,8 +42,17 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
   reorder/insert/remove (no index churn).
 - **Custom widgets** — `widget("Name", attr(...))` renders a registered client React
   component (charts, canvas, animations) while logic stays on the server.
+- **Authorization** — `@LiveAuthorize("ADMIN")` guards actions; a pluggable `LiveSecurity`
+  bean decides (bridge it to Spring Security).
 - **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
   `/springreact/springreact.js`. Consumers ship no frontend files.
+
+## Documentation
+
+Beginner-friendly guides with copy-paste examples live in **[`docs/`](docs/README.md)** —
+one page per feature, plus a full [Todo app tutorial](docs/11-tutorial-todo-app.md) and a
+[How It Works](docs/12-how-it-works.md) deep dive. Start at
+[Getting Started](docs/01-getting-started.md).
 
 ## Module layout
 
@@ -69,9 +78,9 @@ SpringReact/                       (Kotlin, build.gradle.kts)
 
 Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- **8 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+- **9 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
   widgets, diffing), shell + routing, broadcast (two clients), form validation, keyed
-  reconciliation.
+  reconciliation, and authorization.
 - **11 client unit tests** (vitest) — patch application, route resolution, keyed ops —
   plus a TypeScript typecheck.
 
@@ -92,5 +101,5 @@ node-gradle 7.1.0 (system Node) · React 18 (bundled).
 
 ## Roadmap
 
-Suspense-style streaming render · action-level authorization (Spring Security on the
-socket) · a project starter/initializer · publishing to Maven Central.
+Suspense-style streaming render · async self-updating components (loading states) · a
+project starter/initializer · publishing to Maven Central (POM metadata is in place).

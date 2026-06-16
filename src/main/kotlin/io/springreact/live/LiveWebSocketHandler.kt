@@ -7,6 +7,8 @@ import io.springreact.jsc.UiNode
 import io.springreact.jsc.UiTreeDiff
 import jakarta.validation.Validator
 import org.slf4j.LoggerFactory
+import org.springframework.util.ClassUtils
+import java.security.Principal
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
@@ -35,6 +37,7 @@ open class LiveWebSocketHandler(
     private val registry: LiveComponentRegistry,
     private val objectMapper: ObjectMapper,
     private val validator: Validator? = null,
+    private val security: LiveSecurity = LiveSecurity { _, roles -> roles.isEmpty() },
 ) : TextWebSocketHandler(), LiveBroadcaster {
 
     private val log = LoggerFactory.getLogger(LiveWebSocketHandler::class.java)
@@ -79,7 +82,7 @@ open class LiveWebSocketHandler(
                         sendError(session, id, "No component mounted for id '$id'")
                         return
                     }
-                    invokeAction(instance, msg.path("action").asText(), msg.path("args"))
+                    invokeAction(instance, msg.path("action").asText(), msg.path("args"), session.principal)
                     renderUpdate(session, id, instance)
                 }
                 "unmount" -> {
@@ -133,9 +136,17 @@ open class LiveWebSocketHandler(
         }
     }
 
-    private fun invokeAction(instance: Any, action: String, args: JsonNode?) {
+    private fun invokeAction(instance: Any, action: String, args: JsonNode?, principal: Principal?) {
         val descriptor = registry.descriptor(instance)
         val method = descriptor.action(action) ?: throw IllegalArgumentException("Unknown action '$action'")
+
+        // Authorization: method-level @LiveAuthorize wins, else class-level.
+        val authorize = method.getAnnotation(LiveAuthorize::class.java)
+            ?: ClassUtils.getUserClass(instance).getAnnotation(LiveAuthorize::class.java)
+        if (authorize != null && !security.authorize(principal, authorize.roles)) {
+            throw SecurityException("Not authorized for action '$action'")
+        }
+
         val paramTypes = method.parameterTypes
         val callArgs = arrayOfNulls<Any?>(paramTypes.size)
         // A LiveErrors parameter is injected (and validated against the preceding form
