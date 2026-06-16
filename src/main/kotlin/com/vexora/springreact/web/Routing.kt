@@ -79,6 +79,22 @@ class RouteRegistry(context: ApplicationContext) {
     /** layout name → parent layout name (for nested layouts). */
     fun layoutsToJson(): Map<String, String> = layouts
 
+    /**
+     * The layout chain for a view, innermost → outermost (e.g. a page in layout "Section"
+     * whose parent is "Root" → ["Section", "Root"]). Used by SSR to compose the page.
+     */
+    fun layoutChainForView(view: String): List<String> {
+        val start = routes.values.firstOrNull { it.view == view }?.layout ?: return emptyList()
+        val chain = ArrayList<String>()
+        val seen = HashSet<String>()
+        var layout: String? = start
+        while (layout != null && seen.add(layout)) {
+            chain.add(layout)
+            layout = layouts[layout]
+        }
+        return chain
+    }
+
     fun toJson(): Map<String, Any?> {
         val json = LinkedHashMap<String, Any?>()
         routes.forEach { (path, info) ->

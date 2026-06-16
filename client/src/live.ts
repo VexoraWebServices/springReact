@@ -145,8 +145,11 @@ export function applyOps(root: UiNode, ops: Op[]): UiNode {
  * initial full `tree` and incremental `patch` messages.
  */
 export function useServerComponent(component: string, params?: Record<string, unknown>) {
-  const shadow = useRef<UiNode | null>(null)
-  const [tree, setTree] = useState<UiNode | null>(null)
+  // Seed from the server-rendered tree (SSR) so the first paint shows real content and
+  // matches the HTML in #root — no flash before the WebSocket connects.
+  const ssrTree = ((window as any).__SSR__?.[component] ?? null) as UiNode | null
+  const shadow = useRef<UiNode | null>(ssrTree)
+  const [tree, setTree] = useState<UiNode | null>(ssrTree)
 
   const call = useLiveChannel(
     component,

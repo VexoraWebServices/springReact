@@ -1,9 +1,13 @@
 package com.vexora.springreact.autoconfigure
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.vexora.springreact.jsc.ServerComponent
+import com.vexora.springreact.jsc.UiHtml
+import com.vexora.springreact.live.LiveComponentRegistry
 import com.vexora.springreact.web.ReactView
 import com.vexora.springreact.web.ReactViewResolver
 import com.vexora.springreact.web.RouteRegistry
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -44,17 +48,31 @@ class ReactProperties {
      * `@LiveParam var message: String`. Empty = a built-in default error UI.
      */
     var errorView: String = ""
+
+    /**
+     * Server-side rendering: pre-render the initial screen (and its layouts) into the HTML
+     * so "view source", crawlers, and first paint show real content. The client then takes
+     * over for interactivity. On by default.
+     */
+    var ssr: Boolean = true
+
+    /** Stylesheet URLs added as `<link rel="stylesheet">` in the shell head. */
+    var stylesheets: List<String> = emptyList()
 }
 
 /**
- * Renders the HTML shell: inlines the view name, the controller model, and the route
- * table, then loads the framework's bundled runtime, which mounts the matching component.
+ * Renders the HTML shell: inlines the view name, model and route table, optionally
+ * server-renders the initial screen into `#root`, then loads the bundled runtime which
+ * mounts the matching component.
  */
 class ReactRenderer(
     private val properties: ReactProperties,
     private val objectMapper: ObjectMapper,
     private val routes: RouteRegistry,
+    private val registryProvider: () -> LiveComponentRegistry?,
 ) {
+    private class Ssr(val rootHtml: String, val trees: Map<String, Any?>)
+
     @JvmOverloads
     fun render(
         viewName: String,
@@ -73,27 +91,59 @@ class ReactRenderer(
         } else {
             ""
         }
+        val stylesheetLinks = properties.stylesheets.joinToString("") {
+            "\n  <link rel=\"stylesheet\" href=\"${HtmlUtils.htmlEscape(it)}\" />"
+        }
+
+        val ssr = buildSsr(viewName)
+        val ssrJson = writeJson(ssr?.trees)
+        val rootContent = ssr?.rootHtml ?: ""
+
         return """
             <!doctype html>
             <html lang="en">
             <head>
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>${HtmlUtils.htmlEscape(title)}</title>$descriptionMeta
+              <title>${HtmlUtils.htmlEscape(title)}</title>$descriptionMeta$stylesheetLinks
               <script>
                 window.__VIEW__ = $viewJson;
                 window.__MODEL__ = $modelJson;
                 window.__ROUTES__ = $routesJson;
                 window.__LAYOUTS__ = $layoutsJson;
                 window.__NOTFOUND__ = $notFoundJson;
+                window.__SSR__ = $ssrJson;
               </script>
             </head>
             <body>
-              <div id="root"></div>
+              <div id="root">$rootContent</div>
               <script src="${HtmlUtils.htmlEscape(properties.runtimePath)}"></script>
             </body>
             </html>
         """.trimIndent() + "\n"
+    }
+
+    /** Pre-render the page wrapped in its layout chain; collect each component's tree. */
+    private fun buildSsr(viewName: String): Ssr? {
+        if (!properties.ssr) return null
+        val registry = registryProvider() ?: return null
+        if (!registry.has(viewName)) return null
+        return try {
+            val page = registry.create(viewName) as? ServerComponent ?: return null
+            val trees = LinkedHashMap<String, Any?>()
+            val pageTree = page.render()
+            trees[viewName] = pageTree.toJson()
+            var html = UiHtml.render(pageTree)
+            for (layoutName in routes.layoutChainForView(viewName)) {
+                val layout = registry.create(layoutName) as? ServerComponent ?: continue
+                val layoutTree = layout.render()
+                trees[layoutName] = layoutTree.toJson()
+                html = UiHtml.render(layoutTree, slotHtml = html)
+            }
+            Ssr(html, trees)
+        } catch (ex: Exception) {
+            null // never let SSR break the page; the client still renders.
+        }
     }
 
     private fun sanitize(model: Map<String, *>): Map<String, Any?> {
@@ -121,8 +171,12 @@ class ReactAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun reactRenderer(properties: ReactProperties, objectMapper: ObjectMapper, routes: RouteRegistry) =
-        ReactRenderer(properties, objectMapper, routes)
+    fun reactRenderer(
+        properties: ReactProperties,
+        objectMapper: ObjectMapper,
+        routes: RouteRegistry,
+        registry: ObjectProvider<LiveComponentRegistry>,
+    ) = ReactRenderer(properties, objectMapper, routes) { registry.ifAvailable }
 
     @Bean
     @ConditionalOnMissingBean

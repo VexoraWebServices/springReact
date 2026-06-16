@@ -20,9 +20,19 @@ class ShellAndRoutingTest {
     fun shellLoadsBundledRuntime() {
         val html = rest.getForObject("/", String::class.java)
         assertThat(html)
-            .contains("""<div id="root"></div>""")
+            .contains("""<div id="root">""")
             .contains("""window.__VIEW__ = "Home"""")
             .contains("""<script src="/springreact/springreact.js">""")
+    }
+
+    @Test
+    fun shellIsServerRenderedIntoRoot() {
+        // SSR: #root contains the pre-rendered page + layout, and __SSR__ carries the trees.
+        val html = rest.getForObject("/", String::class.java)
+        assertThat(html)
+            .contains("""<div id="root"><div class="app">""") // layout rendered server-side
+            .contains("Hello, Home!")                          // page content in the HTML
+            .contains("window.__SSR__ =")
     }
 
     @Test
