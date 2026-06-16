@@ -68,7 +68,9 @@ That one line configures Kotlin, Spring Boot, dependency management, and the fra
 - **Server-side rendering** — the initial screen + layouts are pre-rendered to HTML on
   the JVM (no Node), so View Source / crawlers / first paint show real content; the client
   seeds from it and takes over. Toggle with `spring.react.ssr`.
-- **Styling** — point `spring.react.stylesheets` at your CSS (served from `static/`).
+- **Styling & npm modules** — point `spring.react.stylesheets` at your CSS (Tailwind,
+  etc.) and `spring.react.scripts` at a custom-widget bundle; the runtime exposes its
+  React (`window.SpringReact.React`) so widget bundles (three.js, charts) share one React.
 - **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
   `/springreact/springreact.js`. Consumers ship no frontend files.
 
@@ -129,6 +131,7 @@ Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** sui
 | `spring.react.error-view`      | *(empty)*                     | component to render when render() throws |
 | `spring.react.ssr`             | `true`                        | pre-render the initial screen into the HTML |
 | `spring.react.stylesheets`     | *(empty)*                     | CSS URLs added as `<link>` to the shell  |
+| `spring.react.scripts`         | *(empty)*                     | JS URLs (widget bundles) loaded after the runtime |
 
 ## Versions
 

@@ -58,6 +58,13 @@ class ReactProperties {
 
     /** Stylesheet URLs added as `<link rel="stylesheet">` in the shell head. */
     var stylesheets: List<String> = emptyList()
+
+    /**
+     * Extra script URLs loaded AFTER the bundled runtime — for consumer "widget" bundles
+     * that register custom React components (charts, three.js, etc.) via
+     * `window.SpringReact.registerWidget`. e.g. `spring.react.scripts=/widgets.js`.
+     */
+    var scripts: List<String> = emptyList()
 }
 
 /**
@@ -111,6 +118,11 @@ class ReactRenderer(
         val ssrJson = writeJson(ssr?.trees)
         val rootContent = ssr?.rootHtml ?: ""
 
+        // Consumer widget bundles, loaded after the runtime so window.SpringReact exists.
+        val extraScripts = properties.scripts.joinToString("") {
+            "\n  <script src=\"${HtmlUtils.htmlEscape(it)}\"></script>"
+        }
+
         return """
             <!doctype html>
             <html lang="en">
@@ -129,7 +141,7 @@ class ReactRenderer(
             </head>
             <body>
               <div id="root">$rootContent</div>
-              <script src="${HtmlUtils.htmlEscape(runtimeSrc())}"></script>
+              <script src="${HtmlUtils.htmlEscape(runtimeSrc())}"></script>$extraScripts
             </body>
             </html>
         """.trimIndent() + "\n"

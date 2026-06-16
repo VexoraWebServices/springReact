@@ -205,7 +205,7 @@ class TodosScreen(
     }
 }
 
-/** A second page sharing the same layout. */
+/** A second page sharing the same layout — also shows a three.js custom widget. */
 @LiveComponent("About")
 @Route("/about", layout = "Main", title = "About · SpringReact")
 class AboutScreen : ServerComponent {
@@ -215,6 +215,14 @@ class AboutScreen : ServerComponent {
             h1("About"),
             p("A SpringReact demo: server-driven React UI in Kotlin, over one WebSocket."),
             p(cls("muted"), "Try: add a duplicate name for a toast, use +/- to set quantity, filter, and toggle."),
+            // A real npm module (three.js) embedded as a custom widget. Logic stays on the
+            // server; the widget is a client React component registered in widgets.js.
+            com.vexora.springreact.jsc.Html.widget(
+                "Cube",
+                com.vexora.springreact.jsc.Html.attr("color", "#9b6dff"),
+                com.vexora.springreact.jsc.Html.attr("size", 180),
+            ),
+            p(cls("muted"), "↑ rendered by three.js via a custom widget"),
             a(href("/"), "← Back to todos"),
         )
 }

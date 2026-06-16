@@ -13,3 +13,8 @@ client/dist/
 
 # OS
 .DS_Store
+
+# widget bundle deps
+examples/**/widgets/node_modules/
+examples/**/widgets/dist/
+examples/todo/src/main/resources/static/widgets.js

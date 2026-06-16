@@ -1,0 +1,16 @@
+{
+  "name": "todo-widgets",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Consumer custom-widget bundle (three.js) for the SpringReact todo example",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/widgets.tsx --bundle --format=iife --minify --jsx=transform --jsx-factory=React.createElement --jsx-fragment=React.Fragment --alias:react=./react-shim.js --outfile=../src/main/resources/static/widgets.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.2"
+  },
+  "dependencies": {
+    "three": "^0.171.0"
+  }
+}

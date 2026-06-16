@@ -22,6 +22,7 @@ examples you can run.
 17. [The Gradle Plugin](17-gradle-plugin.md) — one-line project setup
 18. [Publishing](18-publishing.md) — release to Maven Central
 19. [SSR & Styling](19-ssr-and-styling.md) — server-rendered HTML + CSS
+20. [npm Modules & Tailwind](20-npm-modules-and-tailwind.md) — three.js, charts, Tailwind
 
 ## The 30-second mental model
 
