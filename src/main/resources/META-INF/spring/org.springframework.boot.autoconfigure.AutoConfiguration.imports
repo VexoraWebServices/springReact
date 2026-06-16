@@ -1,0 +1,2 @@
+io.springreact.autoconfigure.ReactAutoConfiguration
+io.springreact.live.LiveAutoConfiguration

@@ -1,0 +1,64 @@
+// SpringReact — a Spring Boot starter for "Java Server Components" (JSC):
+// author React screens in Java or Kotlin, render them on the JVM, stream the
+// React element tree (and patches) to a universal client over one WebSocket.
+//
+// This is a library/plugin: it produces a jar that auto-configures itself when
+// added to a Spring Boot app. The client-side runtime ships separately in client/.
+plugins {
+    id 'java-library'
+    id 'org.jetbrains.kotlin.jvm' version '2.0.21'          // so consumers can write screens in Kotlin
+    id 'org.jetbrains.kotlin.plugin.spring' version '2.0.21' // opens @Component-meta classes
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'maven-publish'
+}
+
+group = 'io.springreact'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:3.4.1"
+    }
+}
+
+dependencies {
+    // Spring MVC (view resolver + static shell) and the single-WebSocket live transport.
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Optional Kotlin support for consumers; harmless on a pure-Java classpath.
+    compileOnly 'org.jetbrains.kotlin:kotlin-stdlib'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // Tests boot a real Spring context (Java + Kotlin test components) and drive /live.
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.jetbrains.kotlin:kotlin-stdlib'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
