@@ -57,6 +57,25 @@ fun save(form: TodoForm, errors: LiveErrors) {
 The client receives a navigate message and performs client-side navigation (same as
 clicking a link).
 
+## Reading headers & cookies
+
+Inside an action you can read the connection's request headers and cookies (like Next.js
+`headers()` / `cookies()`), plus the authenticated user:
+
+```kotlin
+@LiveAction
+fun load() {
+    val ctx = LiveContext.current()
+    val tenant = ctx.header("X-Tenant")
+    val sid = ctx.cookie("sid")
+    val user = ctx.principalName()
+    // …use them
+}
+```
+
+These come from the WebSocket handshake, so they're available to every action on the
+connection.
+
 ## Error boundaries
 
 If a screen's `render()` throws, SpringReact shows a friendly error UI instead of crashing

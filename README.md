@@ -93,7 +93,7 @@ SpringReact/                       (Kotlin, build.gradle.kts)
 
 Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- **18 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+- **19 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
   widgets, diffing), shell + routing, dynamic route params, broadcast (two clients), form
   validation, keyed reconciliation, authorization, async/redirect, 404, middleware, nested layouts, and error boundaries.
 - **18 client unit tests** (vitest) — patch application, route resolution + matching, keyed

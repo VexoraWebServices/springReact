@@ -40,6 +40,24 @@ class LiveContext internal constructor(
     /** A handle you can keep and call [LiveHandle.update] on later. */
     fun handle(): LiveHandle = LiveHandle(handler, session, id)
 
+    /** The authenticated user's name, if any. */
+    fun principalName(): String? = session.principal?.name
+
+    /** A request header from the WebSocket handshake (e.g. "Authorization", "X-Tenant"). */
+    fun header(name: String): String? = session.handshakeHeaders.getFirst(name)
+
+    /** All values of a handshake request header. */
+    fun headers(name: String): List<String> = session.handshakeHeaders[name] ?: emptyList()
+
+    /** A cookie value from the handshake `Cookie` header. */
+    fun cookie(name: String): String? {
+        val raw = session.handshakeHeaders.getFirst("Cookie") ?: return null
+        return raw.split(";")
+            .map { it.trim() }
+            .firstOrNull { it.startsWith("$name=") }
+            ?.substringAfter("=")
+    }
+
     companion object {
         private val holder = ThreadLocal<LiveContext?>()
 
