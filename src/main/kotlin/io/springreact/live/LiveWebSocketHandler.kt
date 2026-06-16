@@ -38,6 +38,7 @@ open class LiveWebSocketHandler(
     private val objectMapper: ObjectMapper,
     private val validator: Validator? = null,
     private val security: LiveSecurity = LiveSecurity { _, roles -> roles.isEmpty() },
+    private val interceptors: List<LiveInterceptor> = emptyList(),
 ) : TextWebSocketHandler(), LiveBroadcaster {
 
     private val log = LoggerFactory.getLogger(LiveWebSocketHandler::class.java)
@@ -83,9 +84,16 @@ open class LiveWebSocketHandler(
                         sendError(session, id, "No component mounted for id '$id'")
                         return
                     }
+                    val action = msg.path("action").asText()
+                    val component = refs(session)[id]?.component ?: ""
+                    val ctx = LiveActionContext(component, action, session.principal)
+                    if (!interceptors.all { it.beforeAction(ctx) }) {
+                        sendError(session, id, "Action '$action' was blocked")
+                        return
+                    }
                     LiveContext.bind(LiveContext(this, session, id))
                     try {
-                        invokeAction(instance, msg.path("action").asText(), msg.path("args"), session.principal)
+                        invokeAction(instance, action, msg.path("args"), session.principal)
                         renderUpdate(session, id, instance)
                     } finally {
                         LiveContext.clear()

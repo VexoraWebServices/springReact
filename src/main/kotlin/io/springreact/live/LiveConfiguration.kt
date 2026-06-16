@@ -64,7 +64,14 @@ class LiveAutoConfiguration {
         objectMapper: ObjectMapper,
         validators: ObjectProvider<Validator>,
         security: LiveSecurity,
-    ) = LiveWebSocketHandler(registry, objectMapper, validators.ifAvailable, security)
+        interceptors: ObjectProvider<LiveInterceptor>,
+    ) = LiveWebSocketHandler(
+        registry,
+        objectMapper,
+        validators.ifAvailable,
+        security,
+        interceptors.orderedStream().toList(),
+    )
 
     /** The handler is the broadcaster; expose it so services/components can inject it. */
     @Bean

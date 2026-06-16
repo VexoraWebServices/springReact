@@ -1,9 +1,9 @@
 # SpringReact
 
-A **Kotlin-first Spring Boot framework** for building React UIs without leaving the JVM.
-You write screens as **Kotlin (or Java) server components**; the framework renders them to
-a React element tree, streams it (and incremental patches) to a runtime it **bundles inside
-its own jar**, and reconciles it with real React over **one WebSocket**.
+A **Kotlin Spring Boot framework** for building React UIs without leaving the JVM. You
+write screens as **Kotlin server components**; the framework renders them to a React
+element tree, streams it (and incremental patches) to a runtime it **bundles inside its own
+jar**, and reconciles it with real React over **one WebSocket**.
 
 Like Thymeleaf: add the dependency, write components, run. **No separate frontend project,
 no npm, no REST glue.** One process, one port, one jar.
@@ -25,8 +25,8 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
 
 ## Features
 
-- **Server components** — `@LiveComponent` + `ServerComponent.render()` in Kotlin or Java,
-  with full Spring DI. State lives in the JVM (`@LiveState`); events are `@LiveAction`s.
+- **Server components** — `@LiveComponent` + `ServerComponent.render()` in Kotlin, with
+  full Spring DI. State lives in the JVM (`@LiveState`); events are `@LiveAction`s.
 - **One WebSocket transport** — no REST, no client store. Full tree on mount, minimal
   **diff patches** after that.
 - **Routing & client navigation** — `@Route("/path", layout="Main", title="…")` declares a
@@ -48,6 +48,10 @@ class HomeScreen(private val greetings: GreetingService) : ServerComponent {
 - **Async, loading & redirects** — `LiveContext.current()` gives an action a `handle()` to
   push a re-render after background work (loading states) and `redirect("/path")` for
   server-initiated navigation.
+- **Not-found pages** — `spring.react.not-found-view` renders a component (with a 404) for
+  unknown URLs.
+- **Middleware** — `LiveInterceptor` beans run before every action (logging, tenancy, rate
+  limiting, blocking).
 - **Bundled runtime** — the React runtime is esbuild-bundled into the jar and served at
   `/springreact/springreact.js`. Consumers ship no frontend files.
 
@@ -82,9 +86,9 @@ SpringReact/                       (Kotlin, build.gradle.kts)
 
 Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** suites:
 
-- **14 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
+- **15 Spring integration tests** over the real `/live` WebSocket — live engine (DI,
   widgets, diffing), shell + routing, dynamic route params, broadcast (two clients), form
-  validation, keyed reconciliation, authorization, async/redirect, and 404 pages.
+  validation, keyed reconciliation, authorization, async/redirect, 404 pages, and middleware.
 - **14 client unit tests** (vitest) — patch application, route resolution + matching, keyed
   ops — plus a TypeScript typecheck.
 
@@ -97,6 +101,7 @@ Compiles Kotlin, esbuild-bundles the runtime into the jar, and runs **both** sui
 | `spring.react.title`           | `SpringReact`                 | default `<title>`                        |
 | `spring.react.runtime-path`    | `/springreact/springreact.js` | URL of the bundled runtime               |
 | `spring.react.allowed-origins` | `*`                           | `/live` WebSocket origin allowlist       |
+| `spring.react.not-found-view`  | *(empty)*                     | component to render for 404s             |
 
 ## Versions
 
@@ -105,5 +110,5 @@ node-gradle 7.1.0 (system Node) · React 18 (bundled).
 
 ## Roadmap
 
-Suspense-style streaming render · async self-updating components (loading states) · a
-project starter/initializer · publishing to Maven Central (POM metadata is in place).
+Toward full Next.js parity: nested layouts · streaming SSR · a project
+starter/initializer · publishing to Maven Central (POM metadata is in place).
